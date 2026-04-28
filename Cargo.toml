@@ -31,7 +31,7 @@ base64 = { version = "0.22" }
 talc = "5"
 
 # Internal
-mldsa-core = { path = "crates/mldsa-core" }
-mldsa44 = { path = "crates/mldsa44" }
-mldsa65 = { path = "crates/mldsa65" }
-mldsa87 = { path = "crates/mldsa87" }
+mldsa-core = { path = "crates/mldsa-core", version = "0.1.0" }
+mldsa44 = { path = "crates/mldsa44", version = "0.1.0" }
+mldsa65 = { path = "crates/mldsa65", version = "0.1.0" }
+mldsa87 = { path = "crates/mldsa87", version = "0.1.0" }
