@@ -1,41 +1,36 @@
-[package]
-name = "mldsa65-wasm-rs"
+[workspace]
+members = ["crates/*"]
+resolver = "3"
+
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
-authors = ["UneBaguette <tom@unebaguette.fr>"]
-publish = false
+authors = ["Thomas <tom@unebaguette.fr>"]
 repository = "https://github.com/UneBaguette/mldsa.wasm"
-description = "ML-DSA-65 (FIPS 204) digital signatures with WASM bindings"
+description = "ML-DSA (FIPS 204) digital signatures with WASM bindings"
 readme = "README.md"
 keywords = ["crypto", "signature", "post-quantum", "wasm", "wasm-bindgen"]
 categories = ["cryptography", "wasm"]
 
-[lib]
-crate-type = ["cdylib", "rlib"]
-
-[features]
-default = []
-wasm = ["dep:wasm-bindgen", "dep:serde-wasm-bindgen", "dep:tsify", "dep:base64"]
-talc = ["dep:talc"]
-
-[dependencies]
+[workspace.dependencies]
 ml-dsa = { version = "0.1.0-rc", features = ["zeroize", "rand_core"] }
 getrandom = { version = "0.4", features = ["sys_rng"] }
 zeroize = { version = "1" }
 serde = { version = "1.0", features = ["derive"] }
 
-# WASM-OPTIONAL
-base64 = { version = "0.22", optional = true }
-wasm-bindgen = { version = "=0.2.118", optional = true }
-serde-wasm-bindgen = { version = "0.6", optional = true }
-tsify = { version = "0.5", features = ["js"], optional = true }
-
-[dev-dependencies]
+# WASM
+wasm-bindgen = { version = "=0.2.118" }
+serde-wasm-bindgen = { version = "0.6" }
+tsify = { version = "0.5", features = ["js"] }
 wasm-bindgen-test = "0.3"
+base64 = { version = "0.22" }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-getrandom = { version = "0.4", features = ["wasm_js"] }
+# Allocator
+talc = "5"
 
-[target.'cfg(target_family = "wasm")'.dependencies]
-talc = { version = "5", optional = true }
+# Internal
+mldsa-core = { path = "crates/mldsa-core" }
+mldsa44-wasm-rs = { path = "crates/mldsa44" }
+mldsa65-wasm-rs = { path = "crates/mldsa65" }
+mldsa87-wasm-rs = { path = "crates/mldsa87" }

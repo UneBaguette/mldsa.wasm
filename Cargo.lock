@@ -360,7 +360,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mldsa65-wasm-rs"
+name = "mldsa-core"
 version = "0.1.0"
 dependencies = [
  "base64",
@@ -368,11 +368,57 @@ dependencies = [
  "ml-dsa",
  "serde",
  "serde-wasm-bindgen",
+ "tsify",
+ "wasm-bindgen",
+ "zeroize",
+]
+
+[[package]]
+name = "mldsa44"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "getrandom",
+ "ml-dsa",
+ "mldsa-core",
+ "serde",
+ "serde-wasm-bindgen",
  "talc",
  "tsify",
  "wasm-bindgen",
  "wasm-bindgen-test",
- "zeroize",
+]
+
+[[package]]
+name = "mldsa65"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "getrandom",
+ "ml-dsa",
+ "mldsa-core",
+ "serde",
+ "serde-wasm-bindgen",
+ "talc",
+ "tsify",
+ "wasm-bindgen",
+ "wasm-bindgen-test",
+]
+
+[[package]]
+name = "mldsa87"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "getrandom",
+ "ml-dsa",
+ "mldsa-core",
+ "serde",
+ "serde-wasm-bindgen",
+ "talc",
+ "tsify",
+ "wasm-bindgen",
+ "wasm-bindgen-test",
 ]
 
 [[package]]

@@ -1,0 +1,72 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install wasm-pack
+        run: |
+          curl -L https://github.com/wasm-bindgen/wasm-pack/releases/download/v0.14.0/wasm-pack-v0.14.0-x86_64-unknown-linux-musl.tar.gz | tar xz
+          sudo mv wasm-pack-*/wasm-pack /usr/local/bin/
+
+      - name: Install wasm-bindgen-cli
+        run: |
+          curl -L https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.118/wasm-bindgen-0.2.118-x86_64-unknown-linux-musl.tar.gz | tar xz
+          sudo mv wasm-bindgen-*/wasm-bindgen /usr/local/bin/
+          sudo mv wasm-bindgen-*/wasm-bindgen-test-runner /usr/local/bin/
+
+      - name: Install wasm-opt
+        run: |
+          curl -L https://github.com/WebAssembly/binaryen/releases/latest/download/binaryen-version_129-x86_64-linux.tar.gz | tar xz
+          sudo mv binaryen-*/bin/wasm-opt /usr/local/bin/
+
+      - name: Native tests
+        run: cargo test --workspace
+
+      - name: WASM tests (ML-DSA-44)
+        run: RUSTFLAGS="-C target-feature=+simd128 -C opt-level=3" wasm-pack test --node crates/mldsa44 --features wasm,talc
+
+      - name: WASM tests (ML-DSA-65)
+        run: RUSTFLAGS="-C target-feature=+simd128 -C opt-level=3" wasm-pack test --node crates/mldsa65 --features wasm,talc
+
+      - name: WASM tests (ML-DSA-87)
+        run: RUSTFLAGS="-C target-feature=+simd128 -C opt-level=3" wasm-pack test --node crates/mldsa87 --features wasm,talc
+
+      - name: Publish to crates.io
+        run: |
+          cargo publish -p mldsa-core
+          sleep 30
+          cargo publish -p mldsa44
+          cargo publish -p mldsa65
+          cargo publish -p mldsa87
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+
+      - name: Build npm packages
+        run: make wasm
+
+      - name: Publish to npm
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          cd pkg/44 && npm publish --access public --provenance && cd ../..
+          cd pkg/65 && npm publish --access public --provenance && cd ../..
+          cd pkg/87 && npm publish --access public --provenance && cd ../..
+          cd pkg/unified && npm publish --access public --provenance
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

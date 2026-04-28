@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Format
+        run: cargo fmt --all --check
+
+      - name: Lint
+        run: cargo clippy --workspace --all-features -- -D warnings
+
+      - name: Native tests
+        run: cargo test --workspace
+
+      - name: Install wasm-pack
+        run: |
+          curl -L https://github.com/wasm-bindgen/wasm-pack/releases/download/v0.14.0/wasm-pack-v0.14.0-x86_64-unknown-linux-musl.tar.gz | tar xz
+          sudo mv wasm-pack-*/wasm-pack /usr/local/bin/
+
+      - name: Install wasm-bindgen-cli
+        run: |
+          curl -L https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.118/wasm-bindgen-0.2.118-x86_64-unknown-linux-musl.tar.gz | tar xz
+          sudo mv wasm-bindgen-*/wasm-bindgen-test-runner /usr/local/bin/
+
+      - name: WASM tests (ML-DSA-44)
+        run: RUSTFLAGS="-C target-feature=+simd128 -C opt-level=3" wasm-pack test --node crates/mldsa44 --features wasm,talc
+
+      - name: WASM tests (ML-DSA-65)
+        run: RUSTFLAGS="-C target-feature=+simd128 -C opt-level=3" wasm-pack test --node crates/mldsa65 --features wasm,talc
+
+      - name: WASM tests (ML-DSA-87)
+        run: RUSTFLAGS="-C target-feature=+simd128 -C opt-level=3" wasm-pack test --node crates/mldsa87 --features wasm,talc

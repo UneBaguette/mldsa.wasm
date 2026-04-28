@@ -1,88 +1,196 @@
-CARGO := cargo
+CARGO        := cargo
 WASM_BINDGEN := wasm-bindgen
-WASM_OPT := wasm-opt
-WASM_OPT_FLAGS := --enable-bulk-memory --enable-nontrapping-float-to-int -O
-WASM_TARGET := wasm32-unknown-unknown
-TARGET_DIR := target/$(WASM_TARGET)/release
-PKG_DIR := pkg
-CRATE_NAME := mldsa65_wasm_rs
-CARGO_FLAGS := -C target-feature=+simd128 -C opt-level=3
+WASM_OPT     := wasm-opt
+WASM_OPT_FLAGS := \
+  --enable-bulk-memory \
+  --enable-simd \
+  --enable-mutable-globals \
+  --enable-sign-ext \
+  -O3 \
+  --strip-debug \
+  --strip-producers \
+  --vacuum \
+  --dce \
+  --converge
 
-VERSION := $(shell grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
+WASM_TARGET  := wasm32-unknown-unknown
+TARGET_DIR   := target/$(WASM_TARGET)/release
+PKG_DIR      := pkg
+CARGO_FLAGS  := -C target-feature=+simd128 -C opt-level=3
 
-# Rust
+VARIANTS     := 44 65 87
+VERSION      := $(shell grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
+
+# rs
 
 .PHONY: check build test clean
 
 check:
-	$(CARGO) check
+	$(CARGO) check --workspace
 
 build:
-	$(CARGO) build --release
+	$(CARGO) build --release --workspace
 
 test:
-	$(CARGO) test
+	$(CARGO) test --workspace
 
-# WASM Tests
+# wasm tests
 
-.PHONY: test-wasm test-all
+.PHONY: test-wasm44 test-wasm65 test-wasm87 test-wasm test-all
 
-test-wasm:
-	RUSTFLAGS="$(CARGO_FLAGS)" wasm-pack test --node --features wasm,talc
+test-wasm44:
+	RUSTFLAGS="$(CARGO_FLAGS)" wasm-pack test --node crates/mldsa44 --features wasm,talc
+
+test-wasm65:
+	RUSTFLAGS="$(CARGO_FLAGS)" wasm-pack test --node crates/mldsa65 --features wasm,talc
+
+test-wasm87:
+	RUSTFLAGS="$(CARGO_FLAGS)" wasm-pack test --node crates/mldsa87 --features wasm,talc
+
+test-wasm: test-wasm44 test-wasm65 test-wasm87
 
 test-all: test test-wasm
 
-# WASM Build
+# wasm
+
+define build_variant
+# build_variant(N) compiles, binds, optimises and packages mldsa$(N)
+.PHONY: wasm$(1)
+wasm$(1):
+	RUSTFLAGS="$(CARGO_FLAGS)" $(CARGO) build \
+	  --target $(WASM_TARGET) --release \
+	  --features wasm,talc \
+	  -p mldsa$(1)
+	@mkdir -p $(PKG_DIR)/$(1)/bundler $(PKG_DIR)/$(1)/web $(PKG_DIR)/$(1)/node
+	$(WASM_BINDGEN) --target bundler \
+	  --out-dir $(PKG_DIR)/$(1)/bundler \
+	  --out-name mldsa$(1) \
+	  $(TARGET_DIR)/mldsa$(1).wasm
+	$(WASM_BINDGEN) --target web \
+	  --out-dir $(PKG_DIR)/$(1)/web \
+	  --out-name mldsa$(1) \
+	  $(TARGET_DIR)/mldsa$(1).wasm
+	$(WASM_BINDGEN) --target nodejs \
+	  --out-dir $(PKG_DIR)/$(1)/node \
+	  --out-name mldsa$(1) \
+	  $(TARGET_DIR)/mldsa$(1).wasm
+	@mv $(PKG_DIR)/$(1)/bundler/mldsa$(1)_bg.wasm $(PKG_DIR)/$(1)/mldsa$(1)_bg.wasm
+	@rm -f $(PKG_DIR)/$(1)/web/mldsa$(1)_bg.wasm \
+	       $(PKG_DIR)/$(1)/node/mldsa$(1)_bg.wasm
+	$(WASM_OPT) $(WASM_OPT_FLAGS) \
+	  $(PKG_DIR)/$(1)/mldsa$(1)_bg.wasm \
+	  -o $(PKG_DIR)/$(1)/mldsa$(1)_bg.wasm
+	@node -e "\
+	  ['bundler','web','node'].forEach(d => { \
+	    const f = '$(PKG_DIR)/$(1)/' + d + '/mldsa$(1).js'; \
+	    require('fs').writeFileSync(f, \
+	      require('fs').readFileSync(f,'utf8') \
+	        .replace(/mldsa$(1)_bg\.wasm/g,'../mldsa$(1)_bg.wasm')); \
+	  });"
+	@rm -f $(PKG_DIR)/$(1)/bundler/package.json \
+	       $(PKG_DIR)/$(1)/web/package.json \
+	       $(PKG_DIR)/$(1)/node/package.json \
+	       $(PKG_DIR)/$(1)/bundler/.gitignore \
+	       $(PKG_DIR)/$(1)/web/.gitignore \
+	       $(PKG_DIR)/$(1)/node/.gitignore
+	@cp crates/mldsa$(1)/README.md  $(PKG_DIR)/$(1)/README.md
+	@sed -i 's|../../LICENSE-MIT|LICENSE-MIT|g; s|../../LICENSE-APACHE|LICENSE-APACHE|g' $(PKG_DIR)/$(1)/README.md
+	@cp LICENSE-MIT                  $(PKG_DIR)/$(1)/LICENSE-MIT
+	@cp LICENSE-APACHE               $(PKG_DIR)/$(1)/LICENSE-APACHE
+	@cp scripts/tpl/index$(1).js.template $(PKG_DIR)/$(1)/index.js
+	@cp scripts/tpl/index$(1).d.ts $(PKG_DIR)/$(1)/index.d.ts
+	@sed -i 's|// @ts-nocheck||' $(PKG_DIR)/$(1)/index.d.ts
+	@node -e "\
+	  const pkg = { \
+	    name: 'mldsa$(1)-wasm-rs', \
+	    version: '$(VERSION)', \
+	    description: 'ML-DSA-$(1) (FIPS 204) digital signatures via Rust/WASM', \
+	    license: 'MIT OR Apache-2.0', \
+	    repository: { type: 'git', url: 'https://github.com/UneBaguette/mldsa.wasm' }, \
+	    main: 'index.js', \
+	    types: 'index.d.ts', \
+	    exports: { '.': { \
+	      node: { require: './node/mldsa$(1).js', import: './index.js' }, \
+	      import: './index.js', \
+	      default: './web/mldsa$(1).js' \
+	    }}, \
+	    files: ['bundler/','web/','node/','index.js','index.d.ts', \
+	            'mldsa$(1)_bg.wasm','README.md','LICENSE-MIT','LICENSE-APACHE'], \
+	    keywords: ['ml-dsa','ml-dsa-$(1)','fips-204','dilithium','signature', \
+	               'post-quantum','wasm','crypto'] \
+	  }; \
+	  require('fs').writeFileSync( \
+	    '$(PKG_DIR)/$(1)/package.json', \
+	    JSON.stringify(pkg, null, 2) + '\n');"
+endef
+
+$(foreach v,$(VARIANTS),$(eval $(call build_variant,$(v))))
+
+# unified
+
+.PHONY: wasm-unified
+wasm-unified: wasm44 wasm65 wasm87
+	@mkdir -p $(PKG_DIR)/unified
+	@cp -r $(PKG_DIR)/44 $(PKG_DIR)/unified/44
+	@cp -r $(PKG_DIR)/65 $(PKG_DIR)/unified/65
+	@cp -r $(PKG_DIR)/87 $(PKG_DIR)/unified/87
+	@cp LICENSE-MIT    $(PKG_DIR)/unified/LICENSE-MIT
+	@cp LICENSE-APACHE $(PKG_DIR)/unified/LICENSE-APACHE
+	@cp README.md      $(PKG_DIR)/unified/README.md
+	@node -e "\
+	  const pkg = { \
+	    name: 'mldsa-wasm', \
+	    version: '$(VERSION)', \
+	    description: 'ML-DSA (FIPS 204) digital signatures via Rust/WASM', \
+	    license: 'MIT OR Apache-2.0', \
+	    repository: { type: 'git', url: 'https://github.com/UneBaguette/mldsa.wasm' }, \
+	    exports: { \
+	      './44': './44/index.js', \
+	      './65': './65/index.js', \
+	      './87': './87/index.js' \
+	    }, \
+	    files: ['44/','65/','87/','README.md','LICENSE-MIT','LICENSE-APACHE'], \
+	    keywords: ['ml-dsa','fips-204','dilithium','signature','post-quantum','wasm','crypto'] \
+	  }; \
+	  require('fs').writeFileSync( \
+	    '$(PKG_DIR)/unified/package.json', \
+	    JSON.stringify(pkg, null, 2) + '\n');"
+
+# build all
 
 .PHONY: wasm wasm-clean
 
-wasm:
-	RUSTFLAGS="$(CARGO_FLAGS)" $(CARGO) build --target $(WASM_TARGET) --release --features wasm,talc
-	@mkdir -p $(PKG_DIR)/bundler $(PKG_DIR)/web $(PKG_DIR)/node
-	$(WASM_BINDGEN) --target bundler --out-dir $(PKG_DIR)/bundler --out-name mldsa65 $(TARGET_DIR)/$(CRATE_NAME).wasm
-	$(WASM_BINDGEN) --target web --out-dir $(PKG_DIR)/web --out-name mldsa65 $(TARGET_DIR)/$(CRATE_NAME).wasm
-	$(WASM_BINDGEN) --target nodejs --out-dir $(PKG_DIR)/node --out-name mldsa65 $(TARGET_DIR)/$(CRATE_NAME).wasm
-	@mv $(PKG_DIR)/bundler/mldsa65_bg.wasm $(PKG_DIR)/mldsa65_bg.wasm
-	@rm -f $(PKG_DIR)/web/mldsa65_bg.wasm $(PKG_DIR)/node/mldsa65_bg.wasm
-	$(WASM_OPT) $(WASM_OPT_FLAGS) $(PKG_DIR)/mldsa65_bg.wasm -o $(PKG_DIR)/mldsa65_bg.wasm
-	@node -e "['bundler','web','node'].forEach(d=>{const f='$(PKG_DIR)/'+d+'/mldsa65.js';require('fs').writeFileSync(f,require('fs').readFileSync(f,'utf8').replace(/mldsa65_bg\.wasm/g,'../mldsa65_bg.wasm'))})"
-	@rm -f $(PKG_DIR)/bundler/package.json $(PKG_DIR)/web/package.json $(PKG_DIR)/node/package.json
-	@rm -f $(PKG_DIR)/bundler/.gitignore $(PKG_DIR)/web/.gitignore $(PKG_DIR)/node/.gitignore
-	@cp README.md $(PKG_DIR)/README.md
-	@cp LICENSE-MIT $(PKG_DIR)/LICENSE-MIT
-	@cp LICENSE-APACHE $(PKG_DIR)/LICENSE-APACHE
-	@cp scripts/tpl/index.js.template $(PKG_DIR)/index.js
-	@cp scripts/tpl/index.d.ts $(PKG_DIR)/index.d.ts
-	@node -e "\
-	   const pkg = {\
-	      name: 'mldsa65-wasm-rs',\
-	      version: '$(VERSION)',\
-	      description: 'ML-DSA-65 (FIPS 204) digital signatures via Rust/WASM',\
-	      license: 'MIT OR Apache-2.0',\
-	      repository: { type: 'git', url: 'https://github.com/UneBaguette/mldsa.wasm' },\
-	      main: 'index.js',\
-	      types: 'index.d.ts',\
-	      exports: { '.': {\
-	         node: { require: './node/mldsa65.js', import: './index.js' },\
-	         import: './index.js',\
-	         default: './web/mldsa65.js'\
-	      }},\
-	      files: ['bundler/', 'web/', 'node/', 'index.js', 'index.d.ts', 'mldsa65_bg.wasm', 'README.md', 'LICENSE-MIT', 'LICENSE-APACHE'],\
-	      keywords: ['ml-dsa', 'ml-dsa-65', 'fips-204', 'dilithium', 'signature', 'post-quantum', 'wasm', 'crypto']\
-	   };\
-	   require('fs').writeFileSync('./$(PKG_DIR)/package.json', JSON.stringify(pkg, null, 2) + '\n');"
+wasm: wasm44 wasm65 wasm87 wasm-unified
 
 wasm-clean:
 	rm -rf $(PKG_DIR)
 
-# Publish
+# Pub
 
-.PHONY: publish-wasm
+.PHONY: publish-npm44 publish-npm65 publish-npm87 publish-npm-unified publish-npm
+.PHONY: publish-cargo publish-all
 
-publish-wasm: wasm
-	cd $(PKG_DIR) && npm publish --access public
+publish-npm44: wasm44
+	cd $(PKG_DIR)/44 && npm publish --access public
 
-# All
+publish-npm65: wasm65
+	cd $(PKG_DIR)/65 && npm publish --access public
+
+publish-npm87: wasm87
+	cd $(PKG_DIR)/87 && npm publish --access public
+
+publish-npm-unified: wasm-unified
+	cd $(PKG_DIR)/unified && npm publish --access public
+
+publish-npm: publish-npm44 publish-npm65 publish-npm87 publish-npm-unified
+
+publish-cargo:
+	$(CARGO) publish -p mldsa-core
+	$(CARGO) publish -p mldsa44
+	$(CARGO) publish -p mldsa65
+	$(CARGO) publish -p mldsa87
+
+publish-all: publish-cargo publish-npm
 
 .PHONY: all clean-all
 
