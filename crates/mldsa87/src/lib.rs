@@ -23,11 +23,20 @@ pub fn generate_keypair() -> KeyPair {
     mldsa_core::generate_keypair::<MlDsa87, VERIFYING_KEY_SIZE>()
 }
 
-pub fn sign(seed: &[u8; SEED_SIZE], message: &[u8], context: Option<&[u8]>) -> [u8; SIGNATURE_SIZE] {
+pub fn sign(
+    seed: &[u8; SEED_SIZE],
+    message: &[u8],
+    context: Option<&[u8]>,
+) -> [u8; SIGNATURE_SIZE] {
     mldsa_core::sign::<MlDsa87, SIGNATURE_SIZE>(seed, message, context)
 }
 
-pub fn verify(vk: &[u8; VERIFYING_KEY_SIZE], message: &[u8], sig: &[u8; SIGNATURE_SIZE], context: Option<&[u8]>) -> bool {
+pub fn verify(
+    vk: &[u8; VERIFYING_KEY_SIZE],
+    message: &[u8],
+    sig: &[u8; SIGNATURE_SIZE],
+    context: Option<&[u8]>,
+) -> bool {
     mldsa_core::verify::<MlDsa87, VERIFYING_KEY_SIZE, SIGNATURE_SIZE>(vk, message, sig, context)
 }
 
@@ -56,7 +65,12 @@ mod wasm {
     }
 
     #[wasm_bindgen]
-    pub fn verify(vk: &str, message: &[u8], signature: &str, context: Option<Vec<u8>>) -> Result<bool, JsError> {
+    pub fn verify(
+        vk: &str,
+        message: &[u8],
+        signature: &str,
+        context: Option<Vec<u8>>,
+    ) -> Result<bool, JsError> {
         let vk_bytes = decode_fixed::<VERIFYING_KEY_SIZE>(vk, "verifyingKey")?;
         let sig_bytes = decode_fixed::<SIGNATURE_SIZE>(signature, "signature")?;
         let ctx = context.as_deref();
