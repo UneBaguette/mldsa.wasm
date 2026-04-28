@@ -1,4 +1,4 @@
-# mldsa87-wasm
+# mldsa87
 
 **ML-DSA-87** ([FIPS 204](https://csrc.nist.gov/pubs/fips/204/final)) digital signature library. 
 

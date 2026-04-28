@@ -1,4 +1,4 @@
-# mldsa65-wasm
+# mldsa65
 
 **ML-DSA-65** ([FIPS 204](https://csrc.nist.gov/pubs/fips/204/final)) digital signature library. 
 
