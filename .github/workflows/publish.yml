@@ -36,22 +36,19 @@ jobs:
           curl -L https://github.com/WebAssembly/binaryen/releases/latest/download/binaryen-version_129-x86_64-linux.tar.gz | tar xz
           sudo mv binaryen-*/bin/wasm-opt /usr/local/bin/
 
-      - name: Native tests
-        run: cargo test --workspace
+      - name: Add wasm target
+        run: rustup target add wasm32-unknown-unknown
 
-      - name: WASM tests (ML-DSA-44)
-        run: RUSTFLAGS="-C target-feature=+simd128 -C opt-level=3" wasm-pack test --node crates/mldsa44 --features wasm,talc
+      - name: Run Native tests
+        run: make test
 
-      - name: WASM tests (ML-DSA-65)
-        run: RUSTFLAGS="-C target-feature=+simd128 -C opt-level=3" wasm-pack test --node crates/mldsa65 --features wasm,talc
-
-      - name: WASM tests (ML-DSA-87)
-        run: RUSTFLAGS="-C target-feature=+simd128 -C opt-level=3" wasm-pack test --node crates/mldsa87 --features wasm,talc
+      - name: Run WASM tests
+        run: make test-wasm
 
       - name: Publish to crates.io
         run: |
           cargo publish -p mldsa-core
-          sleep 30
+          sleep 60
           cargo publish -p mldsa44
           cargo publish -p mldsa65
           cargo publish -p mldsa87

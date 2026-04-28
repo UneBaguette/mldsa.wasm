@@ -21,8 +21,8 @@ jobs:
       - name: Lint
         run: cargo clippy --workspace --all-features -- -D warnings
 
-      - name: Native tests
-        run: cargo test --workspace
+      - name: Run Native tests
+        run: make test
 
       - name: Install wasm-pack
         run: |
@@ -34,11 +34,5 @@ jobs:
           curl -L https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.118/wasm-bindgen-0.2.118-x86_64-unknown-linux-musl.tar.gz | tar xz
           sudo mv wasm-bindgen-*/wasm-bindgen-test-runner /usr/local/bin/
 
-      - name: WASM tests (ML-DSA-44)
-        run: RUSTFLAGS="-C target-feature=+simd128 -C opt-level=3" wasm-pack test --node crates/mldsa44 --features wasm,talc
-
-      - name: WASM tests (ML-DSA-65)
-        run: RUSTFLAGS="-C target-feature=+simd128 -C opt-level=3" wasm-pack test --node crates/mldsa65 --features wasm,talc
-
-      - name: WASM tests (ML-DSA-87)
-        run: RUSTFLAGS="-C target-feature=+simd128 -C opt-level=3" wasm-pack test --node crates/mldsa87 --features wasm,talc
+      - name: Run WASM tests
+        run: make test-wasm
