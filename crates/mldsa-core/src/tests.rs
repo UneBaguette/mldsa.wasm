@@ -21,7 +21,7 @@ macro_rules! test_mldsa {
             #[test]
             fn signature_size() {
                 let kp = generate_keypair();
-                let sig = sign(&kp.seed, b"test");
+                let sig = sign(&kp.seed, b"test", None);
 
                 assert_eq!(sig.len(), SIGNATURE_SIZE);
             }
@@ -44,43 +44,54 @@ macro_rules! test_mldsa {
             #[test]
             fn sign_verify_roundtrip() {
                 let kp = generate_keypair();
-                let sig = sign(&kp.seed, b"hello");
+                let sig = sign(&kp.seed, b"hello", None);
 
-                assert!(verify(&kp.verifying_key, b"hello", &sig));
+                assert!(verify(&kp.verifying_key, b"hello", &sig, None));
+            }
+
+            #[test]
+            fn sign_verify_with_context() {
+                let kp = generate_keypair();
+                let ctx = Some(b"vexahub-share-v1".as_slice());
+                let sig = sign(&kp.seed, b"hello", ctx);
+
+                assert!(verify(&kp.verifying_key, b"hello", &sig, ctx));
+                assert!(!verify(&kp.verifying_key, b"hello", &sig, None));
+                assert!(!verify(&kp.verifying_key, b"hello", &sig, Some(b"wrong")));
             }
 
             #[test]
             fn sign_verify_empty_message() {
                 let kp = generate_keypair();
-                let sig = sign(&kp.seed, b"");
+                let sig = sign(&kp.seed, b"", None);
 
-                assert!(verify(&kp.verifying_key, b"", &sig));
+                assert!(verify(&kp.verifying_key, b"", &sig, None));
             }
 
             #[test]
             fn sign_verify_long_message() {
                 let kp = generate_keypair();
                 let msg = vec![0xABu8; 100_000];
-                let sig = sign(&kp.seed, &msg);
+                let sig = sign(&kp.seed, &msg, None);
 
-                assert!(verify(&kp.verifying_key, &msg, &sig));
+                assert!(verify(&kp.verifying_key, &msg, &sig, None));
             }
 
             #[test]
             fn sign_verify_binary_message() {
                 let kp = generate_keypair();
                 let msg: Vec<u8> = (0u8..=255).collect();
-                let sig = sign(&kp.seed, &msg);
+                let sig = sign(&kp.seed, &msg, None);
 
-                assert!(verify(&kp.verifying_key, &msg, &sig));
+                assert!(verify(&kp.verifying_key, &msg, &sig, None));
             }
 
             #[test]
             fn sign_verify_single_byte_message() {
                 let kp = generate_keypair();
-                let sig = sign(&kp.seed, &[0x00]);
+                let sig = sign(&kp.seed, &[0x00], None);
 
-                assert!(verify(&kp.verifying_key, &[0x00], &sig));
+                assert!(verify(&kp.verifying_key, &[0x00], &sig, None));
             }
 
             // d
@@ -88,8 +99,8 @@ macro_rules! test_mldsa {
             #[test]
             fn deterministic_signatures() {
                 let kp = generate_keypair();
-                let sig1 = sign(&kp.seed, b"test");
-                let sig2 = sign(&kp.seed, b"test");
+                let sig1 = sign(&kp.seed, b"test", None);
+                let sig2 = sign(&kp.seed, b"test", None);
 
                 assert_eq!(sig1, sig2);
             }
@@ -97,16 +108,16 @@ macro_rules! test_mldsa {
             #[test]
             fn seed_reproduces_same_verifying_key() {
                 let kp = generate_keypair();
-                let sig = sign(&kp.seed, b"test");
+                let sig = sign(&kp.seed, b"test", None);
 
-                assert!(verify(&kp.verifying_key, b"test", &sig));
+                assert!(verify(&kp.verifying_key, b"test", &sig, None));
             }
 
             #[test]
             fn different_messages_produce_different_signatures() {
                 let kp = generate_keypair();
-                let sig1 = sign(&kp.seed, b"message one");
-                let sig2 = sign(&kp.seed, b"message two");
+                let sig1 = sign(&kp.seed, b"message one", None);
+                let sig2 = sign(&kp.seed, b"message two", None);
 
                 assert_ne!(sig1, sig2);
             }
@@ -125,18 +136,18 @@ macro_rules! test_mldsa {
             #[test]
             fn wrong_message_fails() {
                 let kp = generate_keypair();
-                let sig = sign(&kp.seed, b"correct");
+                let sig = sign(&kp.seed, b"correct", None);
 
-                assert!(!verify(&kp.verifying_key, b"wrong", &sig));
+                assert!(!verify(&kp.verifying_key, b"wrong", &sig, None));
             }
 
             #[test]
             fn wrong_key_fails() {
                 let kp1 = generate_keypair();
                 let kp2 = generate_keypair();
-                let sig = sign(&kp1.seed, b"hello");
+                let sig = sign(&kp1.seed, b"hello", None);
 
-                assert!(!verify(&kp2.verifying_key, b"hello", &sig));
+                assert!(!verify(&kp2.verifying_key, b"hello", &sig, None));
             }
 
             #[test]
@@ -144,7 +155,7 @@ macro_rules! test_mldsa {
                 let kp = generate_keypair();
                 let bad_sig = [0u8; SIGNATURE_SIZE];
 
-                assert!(!verify(&kp.verifying_key, b"test", &bad_sig));
+                assert!(!verify(&kp.verifying_key, b"test", &bad_sig, None));
             }
 
             #[test]
@@ -152,45 +163,45 @@ macro_rules! test_mldsa {
                 let kp = generate_keypair();
                 let bad_sig = [0xFFu8; SIGNATURE_SIZE];
 
-                assert!(!verify(&kp.verifying_key, b"test", &bad_sig));
+                assert!(!verify(&kp.verifying_key, b"test", &bad_sig, None));
             }
 
             #[test]
             fn tampered_signature_fails() {
                 let kp = generate_keypair();
-                let mut sig = sign(&kp.seed, b"hello");
+                let mut sig = sign(&kp.seed, b"hello", None);
 
                 sig[0] ^= 0xFF;
 
-                assert!(!verify(&kp.verifying_key, b"hello", &sig));
+                assert!(!verify(&kp.verifying_key, b"hello", &sig, None));
             }
 
             #[test]
             fn tampered_signature_last_byte_fails() {
                 let kp = generate_keypair();
-                let mut sig = sign(&kp.seed, b"hello");
+                let mut sig = sign(&kp.seed, b"hello", None);
 
                 sig[SIGNATURE_SIZE - 1] ^= 0x01;
 
-                assert!(!verify(&kp.verifying_key, b"hello", &sig));
+                assert!(!verify(&kp.verifying_key, b"hello", &sig, None));
             }
 
             #[test]
             fn empty_message_wrong_message_fails() {
                 let kp = generate_keypair();
-                let sig = sign(&kp.seed, b"");
+                let sig = sign(&kp.seed, b"", None);
 
-                assert!(!verify(&kp.verifying_key, b"not empty", &sig));
+                assert!(!verify(&kp.verifying_key, b"not empty", &sig, None));
             }
 
             #[test]
             fn cross_variant_message_fails() {
                 // signature for one message cannot verify a different message
                 let kp = generate_keypair();
-                let sig = sign(&kp.seed, b"message a");
+                let sig = sign(&kp.seed, b"message a", None);
 
-                assert!(!verify(&kp.verifying_key, b"message b", &sig));
-                assert!(!verify(&kp.verifying_key, b"message A", &sig)); // case-sensitive
+                assert!(!verify(&kp.verifying_key, b"message b", &sig, None));
+                assert!(!verify(&kp.verifying_key, b"message A", &sig, None)); // case-sensitive
             }
         }
 
@@ -204,22 +215,25 @@ macro_rules! test_mldsa {
             #[wasm_bindgen_test]
             fn wasm_sign_verify_roundtrip() {
                 let kp = generate_keypair_wasm();
-                let sig = sign_wasm(&kp.seed, b"hello wasm").unwrap();
-                assert!(verify_wasm(&kp.verifying_key, b"hello wasm", &sig).unwrap());
+                let sig = sign_wasm(&kp.seed, b"hello wasm", None).unwrap();
+
+                assert!(verify_wasm(&kp.verifying_key, b"hello wasm", &sig, None).unwrap());
             }
 
             #[wasm_bindgen_test]
             fn wasm_sign_verify_empty_message() {
                 let kp = generate_keypair_wasm();
-                let sig = sign_wasm(&kp.seed, b"").unwrap();
-                assert!(verify_wasm(&kp.verifying_key, b"", &sig).unwrap());
+                let sig = sign_wasm(&kp.seed, b"", None).unwrap();
+
+                assert!(verify_wasm(&kp.verifying_key, b"", &sig, None).unwrap());
             }
 
             #[wasm_bindgen_test]
             fn wasm_deterministic_signatures() {
                 let kp = generate_keypair_wasm();
-                let sig1 = sign_wasm(&kp.seed, b"test").unwrap();
-                let sig2 = sign_wasm(&kp.seed, b"test").unwrap();
+                let sig1 = sign_wasm(&kp.seed, b"test", None).unwrap();
+                let sig2 = sign_wasm(&kp.seed, b"test", None).unwrap();
+
                 assert_eq!(sig1, sig2);
             }
 
@@ -228,85 +242,99 @@ macro_rules! test_mldsa {
             #[wasm_bindgen_test]
             fn wasm_wrong_message_fails() {
                 let kp = generate_keypair_wasm();
-                let sig = sign_wasm(&kp.seed, b"correct").unwrap();
-                assert!(!verify_wasm(&kp.verifying_key, b"wrong", &sig).unwrap());
+                let sig = sign_wasm(&kp.seed, b"correct", None).unwrap();
+
+                assert!(!verify_wasm(&kp.verifying_key, b"wrong", &sig, None).unwrap());
             }
 
             #[wasm_bindgen_test]
             fn wasm_wrong_key_fails() {
                 let kp1 = generate_keypair_wasm();
                 let kp2 = generate_keypair_wasm();
-                let sig = sign_wasm(&kp1.seed, b"hello").unwrap();
-                assert!(!verify_wasm(&kp2.verifying_key, b"hello", &sig).unwrap());
+                let sig = sign_wasm(&kp1.seed, b"hello", None).unwrap();
+
+                assert!(!verify_wasm(&kp2.verifying_key, b"hello", &sig, None).unwrap());
             }
 
             // errors!
 
             #[wasm_bindgen_test]
             fn wasm_invalid_seed_base64() {
-                assert!(sign_wasm("not-valid!!!", b"test").is_err());
+                assert!(sign_wasm("not-valid!!!", b"test", None).is_err());
             }
 
             #[wasm_bindgen_test]
             fn wasm_wrong_seed_length() {
                 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+
                 let short = URL_SAFE_NO_PAD.encode(&[0u8; 16]);
-                assert!(sign_wasm(&short, b"test").is_err());
+
+                assert!(sign_wasm(&short, b"test", None).is_err());
             }
 
             #[wasm_bindgen_test]
             fn wasm_seed_too_long() {
                 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+
                 let long = URL_SAFE_NO_PAD.encode(&[0u8; 64]);
-                assert!(sign_wasm(&long, b"test").is_err());
+
+                assert!(sign_wasm(&long, b"test", None).is_err());
             }
 
             #[wasm_bindgen_test]
             fn wasm_invalid_vk_base64() {
                 let kp = generate_keypair_wasm();
-                let sig = sign_wasm(&kp.seed, b"test").unwrap();
-                assert!(verify_wasm("bad!!!", b"test", &sig).is_err());
+                let sig = sign_wasm(&kp.seed, b"test", None).unwrap();
+
+                assert!(verify_wasm("bad!!!", b"test", &sig, None).is_err());
             }
 
             #[wasm_bindgen_test]
             fn wasm_invalid_sig_base64() {
                 let kp = generate_keypair_wasm();
-                assert!(verify_wasm(&kp.verifying_key, b"test", "bad!!!").is_err());
+
+                assert!(verify_wasm(&kp.verifying_key, b"test", "bad!!!", None).is_err());
             }
 
             #[wasm_bindgen_test]
             fn wasm_wrong_vk_length() {
                 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+
                 let kp = generate_keypair_wasm();
-                let sig = sign_wasm(&kp.seed, b"test").unwrap();
+                let sig = sign_wasm(&kp.seed, b"test", None).unwrap();
                 let short_vk = URL_SAFE_NO_PAD.encode(&[0u8; 16]);
-                assert!(verify_wasm(&short_vk, b"test", &sig).is_err());
+
+                assert!(verify_wasm(&short_vk, b"test", &sig, None).is_err());
             }
 
             #[wasm_bindgen_test]
             fn wasm_wrong_sig_length() {
                 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+
                 let kp = generate_keypair_wasm();
                 let short_sig = URL_SAFE_NO_PAD.encode(&[0u8; 16]);
-                assert!(verify_wasm(&kp.verifying_key, b"test", &short_sig).is_err());
+
+                assert!(verify_wasm(&kp.verifying_key, b"test", &short_sig, None).is_err());
             }
 
             #[wasm_bindgen_test]
             fn wasm_empty_string_seed_fails() {
-                assert!(sign_wasm("", b"test").is_err());
+                assert!(sign_wasm("", b"test", None).is_err());
             }
 
             #[wasm_bindgen_test]
             fn wasm_empty_string_vk_fails() {
                 let kp = generate_keypair_wasm();
-                let sig = sign_wasm(&kp.seed, b"test").unwrap();
-                assert!(verify_wasm("", b"test", &sig).is_err());
+                let sig = sign_wasm(&kp.seed, b"test", None).unwrap();
+
+                assert!(verify_wasm("", b"test", &sig, None).is_err());
             }
 
             #[wasm_bindgen_test]
             fn wasm_empty_string_sig_fails() {
                 let kp = generate_keypair_wasm();
-                assert!(verify_wasm(&kp.verifying_key, b"test", "").is_err());
+
+                assert!(verify_wasm(&kp.verifying_key, b"test", "", None).is_err());
             }
         }
     };

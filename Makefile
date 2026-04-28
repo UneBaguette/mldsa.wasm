@@ -97,8 +97,8 @@ wasm$(1):
 	@sed -i 's|../../LICENSE-MIT|LICENSE-MIT|g; s|../../LICENSE-APACHE|LICENSE-APACHE|g' $(PKG_DIR)/$(1)/README.md
 	@cp LICENSE-MIT                  $(PKG_DIR)/$(1)/LICENSE-MIT
 	@cp LICENSE-APACHE               $(PKG_DIR)/$(1)/LICENSE-APACHE
-	@cp scripts/tpl/index$(1).js.template $(PKG_DIR)/$(1)/index.js
-	@cp scripts/tpl/index$(1).d.ts $(PKG_DIR)/$(1)/index.d.ts
+	@sed 's/{{N}}/$(1)/g' scripts/tpl/index.js.template > $(PKG_DIR)/$(1)/index.js
+	@sed 's/{{N}}/$(1)/g' scripts/tpl/index.d.ts > $(PKG_DIR)/$(1)/index.d.ts
 	@sed -i 's|// @ts-nocheck||' $(PKG_DIR)/$(1)/index.d.ts
 	@node -e "\
 	  const pkg = { \
@@ -110,7 +110,8 @@ wasm$(1):
 	    main: 'index.js', \
 	    types: 'index.d.ts', \
 	    exports: { '.': { \
-	      node: { require: './node/mldsa$(1).js', import: './index.js' }, \
+	      node: { require: './node/mldsa$(1).js', import: './node/mldsa$(1).js' }, \
+	      bundler: './index.js', \
 	      import: './index.js', \
 	      default: './web/mldsa$(1).js' \
 	    }}, \
@@ -139,15 +140,30 @@ wasm-unified: wasm44 wasm65 wasm87
 	@cp README.md      $(PKG_DIR)/unified/README.md
 	@node -e "\
 	  const pkg = { \
-	    name: 'mldsa-wasm', \
+	    name: 'mldsa-wasm-rs', \
 	    version: '$(VERSION)', \
 	    description: 'ML-DSA (FIPS 204) digital signatures via Rust/WASM', \
 	    license: 'MIT OR Apache-2.0', \
 	    repository: { type: 'git', url: 'https://github.com/UneBaguette/mldsa.wasm' }, \
 	    exports: { \
-	      './44': './44/index.js', \
-	      './65': './65/index.js', \
-	      './87': './87/index.js' \
+	      './44': { \
+	        node: { require: './44/node/mldsa44.js', import: './44/node/mldsa44.js' }, \
+	        bundler: './44/index.js', \
+	        import: './44/index.js', \
+	        default: './44/web/mldsa44.js' \
+	      }, \
+	      './65': { \
+	        node: { require: './65/node/mldsa65.js', import: './65/node/mldsa65.js' }, \
+	        bundler: './65/index.js', \
+	        import: './65/index.js', \
+	        default: './65/web/mldsa65.js' \
+	      }, \
+	      './87': { \
+	        node: { require: './87/node/mldsa87.js', import: './87/node/mldsa87.js' }, \
+	        bundler: './87/index.js', \
+	        import: './87/index.js', \
+	        default: './87/web/mldsa87.js' \
+	      } \
 	    }, \
 	    files: ['44/','65/','87/','README.md','LICENSE-MIT','LICENSE-APACHE'], \
 	    keywords: ['ml-dsa','fips-204','dilithium','signature','post-quantum','wasm','crypto'] \

@@ -9,7 +9,7 @@ ML-DSA-65 (formerly **CRYSTALS-Dilithium**) provides NIST Level 3 post-quantum s
 ## Native Rust usage
 
 ```rust
-use mldsa65_wasm_rs::*;
+use mldsa65::*;
 
 let kp = generate_keypair();
 let sig = sign(&kp.seed, b"hello");

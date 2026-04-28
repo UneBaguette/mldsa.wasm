@@ -10,15 +10,6 @@ And a **unified** Rust crate, built on [`ml-dsa`](https://github.com/RustCrypto/
 
 ## Packages
 
-### npm
-
-| Package                             | Security Level | npm                           |
-|-------------------------------------|----------------|-------------------------------|
-| [`mldsa44-wasm-rs`](crates/mldsa44) | NIST Level 2   | `npm install mldsa44-wasm-rs` |
-| [`mldsa65-wasm-rs`](crates/mldsa65) | NIST Level 3   | `npm install mldsa65-wasm-rs` |
-| [`mldsa87-wasm-rs`](crates/mldsa87) | NIST Level 5   | `npm install mldsa87-wasm-rs` |
-| `mldsa-wasm`                        | All variants   | `npm install mldsa-wasm`      |
-
 ### Rust (crates.io)
 
 | Crate                             | Description                |
@@ -27,6 +18,15 @@ And a **unified** Rust crate, built on [`ml-dsa`](https://github.com/RustCrypto/
 | [`mldsa65`](crates/mldsa65)       | ML-DSA-65 (NIST Level 3)   |
 | [`mldsa87`](crates/mldsa87)       | ML-DSA-87 (NIST Level 5)   |
 | [`mldsa-core`](crates/mldsa-core) | Shared core implementation |
+
+### npm
+
+| Package                          | Security Level | npm                         |
+|----------------------------------|----------------|-----------------------------|
+| [`mldsa44-wasm`](crates/mldsa44) | NIST Level 2   | `npm install mldsa44-wasm`  |
+| [`mldsa65-wasm`](crates/mldsa65) | NIST Level 3   | `npm install mldsa65-wasm`  |
+| [`mldsa87-wasm`](crates/mldsa87) | NIST Level 5   | `npm install mldsa87-wasm`  |
+| `mldsa-wasm-rs`                  | All variants   | `npm install mldsa-wasm-rs` |
 
 ## Parameter sets
 
@@ -41,11 +41,11 @@ And a **unified** Rust crate, built on [`ml-dsa`](https://github.com/RustCrypto/
 ### Standalone packages
 
 ```bash
-npm install mldsa65-wasm-rs
+npm install mldsa65-wasm
 ```
 
 ```ts
-import { generateKeypair, sign, verify } from 'mldsa65-wasm-rs';
+import { generateKeypair, sign, verify } from 'mldsa65-wasm';
 
 // Generate a keypair
 const { seed, verifyingKey } = generateKeypair();
@@ -61,14 +61,14 @@ console.log(valid); // true
 ### Unified package with subpath exports
 
 ```bash
-npm install mldsa-wasm
+npm install mldsa-wasm-rs
 ```
 
 ```ts
-import { generateKeypair, sign, verify } from 'mldsa-wasm/65';
+import { generateKeypair, sign, verify } from 'mldsa-wasm-rs/65';
 // or
-import { generateKeypair, sign, verify } from 'mldsa-wasm/44';
-import { generateKeypair, sign, verify } from 'mldsa-wasm/87';
+import { generateKeypair, sign, verify } from 'mldsa-wasm-rs/44';
+import { generateKeypair, sign, verify } from 'mldsa-wasm-rs/87';
 ```
 
 ## Rust

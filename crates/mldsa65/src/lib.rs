@@ -23,12 +23,12 @@ pub fn generate_keypair() -> KeyPair {
     mldsa_core::generate_keypair::<MlDsa65, VERIFYING_KEY_SIZE>()
 }
 
-pub fn sign(seed: &[u8; SEED_SIZE], message: &[u8]) -> [u8; SIGNATURE_SIZE] {
-    mldsa_core::sign::<MlDsa65, SIGNATURE_SIZE>(seed, message)
+pub fn sign(seed: &[u8; SEED_SIZE], message: &[u8], context: Option<&[u8]>) -> [u8; SIGNATURE_SIZE] {
+    mldsa_core::sign::<MlDsa65, SIGNATURE_SIZE>(seed, message, context)
 }
 
-pub fn verify(vk: &[u8; VERIFYING_KEY_SIZE], message: &[u8], sig: &[u8; SIGNATURE_SIZE]) -> bool {
-    mldsa_core::verify::<MlDsa65, VERIFYING_KEY_SIZE, SIGNATURE_SIZE>(vk, message, sig)
+pub fn verify(vk: &[u8; VERIFYING_KEY_SIZE], message: &[u8], sig: &[u8; SIGNATURE_SIZE], context: Option<&[u8]>) -> bool {
+    mldsa_core::verify::<MlDsa65, VERIFYING_KEY_SIZE, SIGNATURE_SIZE>(vk, message, sig, context)
 }
 
 #[cfg(feature = "wasm")]
@@ -48,18 +48,20 @@ mod wasm {
     }
 
     #[wasm_bindgen]
-    pub fn sign(seed: &str, message: &[u8]) -> Result<String, JsError> {
+    pub fn sign(seed: &str, message: &[u8], context: Option<Vec<u8>>) -> Result<String, JsError> {
         let seed_bytes = decode_fixed::<SEED_SIZE>(seed, "seed")?;
+        let ctx = context.as_deref();
 
-        Ok(encode(&super::sign(&seed_bytes, message)))
+        Ok(encode(&super::sign(&seed_bytes, message, ctx)))
     }
 
     #[wasm_bindgen]
-    pub fn verify(vk: &str, message: &[u8], signature: &str) -> Result<bool, JsError> {
+    pub fn verify(vk: &str, message: &[u8], signature: &str, context: Option<Vec<u8>>) -> Result<bool, JsError> {
         let vk_bytes = decode_fixed::<VERIFYING_KEY_SIZE>(vk, "verifyingKey")?;
         let sig_bytes = decode_fixed::<SIGNATURE_SIZE>(signature, "signature")?;
+        let ctx = context.as_deref();
 
-        Ok(super::verify(&vk_bytes, message, &sig_bytes))
+        Ok(super::verify(&vk_bytes, message, &sig_bytes, ctx))
     }
 }
 

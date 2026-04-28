@@ -31,6 +31,6 @@ talc = "5"
 
 # Internal
 mldsa-core = { path = "crates/mldsa-core" }
-mldsa44-wasm-rs = { path = "crates/mldsa44" }
-mldsa65-wasm-rs = { path = "crates/mldsa65" }
-mldsa87-wasm-rs = { path = "crates/mldsa87" }
+mldsa44 = { path = "crates/mldsa44" }
+mldsa65 = { path = "crates/mldsa65" }
+mldsa87 = { path = "crates/mldsa87" }

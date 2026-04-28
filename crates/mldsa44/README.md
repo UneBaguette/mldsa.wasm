@@ -9,7 +9,7 @@ ML-DSA-44 (formerly **CRYSTALS-Dilithium**) provides NIST Level 2 post-quantum s
 ## Native Rust usage
 
 ```rust
-use mldsa44_wasm_rs::*;
+use mldsa44::*;
 
 let kp = generate_keypair();
 let sig = sign(&kp.seed, b"hello");

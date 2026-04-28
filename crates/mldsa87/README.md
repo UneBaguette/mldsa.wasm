@@ -9,7 +9,7 @@ ML-DSA-87 (formerly **CRYSTALS-Dilithium**) provides NIST Level 5 post-quantum s
 ## Native Rust usage
 
 ```rust
-use mldsa87_wasm_rs::*;
+use mldsa87::*;
 
 let kp = generate_keypair();
 let sig = sign(&kp.seed, b"hello");

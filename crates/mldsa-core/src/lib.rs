@@ -7,9 +7,8 @@ pub mod wasm;
 pub mod tests;
 
 use ml_dsa::{
-    EncodedVerifyingKey, KeyGen, MlDsaParams, Signature, VerifyingKey,
+    EncodedVerifyingKey, KeyGen, MlDsaParams, Signature, VerifyingKey, signature::Keypair,
     signature::rand_core::UnwrapErr,
-    signature::{Keypair, Verifier},
 };
 use zeroize::Zeroize;
 
@@ -44,14 +43,26 @@ where
     }
 }
 
-pub fn sign<P, const SIG: usize>(seed: &[u8; 32], message: &[u8]) -> [u8; SIG]
+pub fn sign<P, const SIG: usize>(
+    seed: &[u8; 32],
+    message: &[u8],
+    context: Option<&[u8]>,
+) -> [u8; SIG]
 where
     P: KeyGen<KeyPair = ml_dsa::SigningKey<P>>,
     P: MlDsaParams,
 {
+    let ctx = context.unwrap_or(&[]);
+    assert!(ctx.len() <= 255, "context must be at most 255 bytes");
+
     let seed_arr = ml_dsa::B32::from(*seed);
     let kp = P::from_seed(&seed_arr);
-    let sig = kp.signing_key().sign_deterministic(message, &[]).unwrap();
+
+    let sig = kp
+        .signing_key()
+        .sign_deterministic(message, ctx)
+        .expect("sign_deterministic failed despite valid context");
+
     let encoded = sig.encode();
     let mut sig_bytes = [0u8; SIG];
 
@@ -64,10 +75,13 @@ pub fn verify<P, const VK: usize, const SIG: usize>(
     vk_bytes: &[u8; VK],
     message: &[u8],
     sig_bytes: &[u8; SIG],
+    context: Option<&[u8]>,
 ) -> bool
 where
     P: MlDsaParams,
 {
+    let ctx = context.unwrap_or(&[]);
+
     let vk_encoded = match EncodedVerifyingKey::<P>::try_from(vk_bytes.as_slice()) {
         Ok(v) => v,
         Err(_) => return false,
@@ -80,5 +94,5 @@ where
         Err(_) => return false,
     };
 
-    vk.verify(message, &sig).is_ok()
+    vk.verify_with_context(message, ctx, &sig)
 }

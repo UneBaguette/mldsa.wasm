@@ -1,7 +1,0 @@
-// Copyright (c) 2026-present Thomas <tom@unebaguette.fr>
-// SPDX-License-Identifier: MIT OR Apache-2.0
-//
-// mldsa87-wasm-rs. Auto-generated entry point.
-// Do not edit directly!
-
-export { generateKeypair, sign, verify } from './bundler/mldsa87.js';

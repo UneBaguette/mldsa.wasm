@@ -14,6 +14,7 @@ pub fn decode_fixed<const N: usize>(s: &str, context: &str) -> Result<[u8; N], J
     let bytes = URL_SAFE_NO_PAD
         .decode(s)
         .map_err(|_| JsError::new(&format!("invalid base64 at {context}")))?;
+
     bytes
         .as_slice()
         .try_into()
