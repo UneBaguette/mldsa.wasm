@@ -4,7 +4,9 @@
 
 ML-DSA (formerly **CRYSTALS-Dilithium**) is NIST's standardized post-quantum signature scheme. 
 
-This repository provides all three parameter sets as standalone npm packages and a unified Rust crate, built on [`ml-dsa`](https://github.com/RustCrypto/signatures/tree/master/ml-dsa) by **RustCrypto**.
+This repository provides all three parameter sets as standalone npm packages.
+
+And a **unified** Rust crate, built on [`ml-dsa`](https://github.com/RustCrypto/signatures/tree/master/ml-dsa) by **RustCrypto**.
 
 ## Packages
 

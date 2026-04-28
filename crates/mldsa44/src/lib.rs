@@ -34,7 +34,7 @@ pub fn verify(vk: &[u8; VERIFYING_KEY_SIZE], message: &[u8], sig: &[u8; SIGNATUR
 #[cfg(feature = "wasm")]
 mod wasm {
     use super::*;
-    use mldsa_core::wasm::{decode_fixed, encode, GenerateKeypairResult};
+    use mldsa_core::wasm::{GenerateKeypairResult, decode_fixed, encode};
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen(js_name = "generateKeypair")]
