@@ -102,7 +102,7 @@ wasm$(1):
 	@sed -i 's|// @ts-nocheck||' $(PKG_DIR)/$(1)/index.d.ts
 	@node -e "\
 	  const pkg = { \
-	    name: 'mldsa$(1)-wasm-rs', \
+	    name: 'mldsa$(1)-wasm', \
 	    version: '$(VERSION)', \
 	    description: 'ML-DSA-$(1) (FIPS 204) digital signatures via Rust/WASM', \
 	    license: 'MIT OR Apache-2.0', \
