@@ -1,7 +1,6 @@
 // Copyright (c) 2026-present Thomas <tom@unebaguette.fr>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-#[cfg(feature = "wasm")]
 pub mod wasm;
 
 pub mod tests;
@@ -39,6 +38,24 @@ where
 
     KeyPair {
         seed,
+        verifying_key: vk_bytes,
+    }
+}
+
+pub fn generate_keypair_from_seed<P, const VK: usize>(seed: &[u8; 32]) -> KeyPair<VK>
+where
+    P: KeyGen<KeyPair = ml_dsa::SigningKey<P>>,
+    P: MlDsaParams,
+{
+    let seed_arr = ml_dsa::B32::from(*seed);
+    let kp = P::from_seed(&seed_arr);
+    let vk = kp.verifying_key().encode();
+    let mut vk_bytes = [0u8; VK];
+
+    vk_bytes.copy_from_slice(&vk);
+
+    KeyPair {
+        seed: *seed,
         verifying_key: vk_bytes,
     }
 }
@@ -95,4 +112,54 @@ where
     };
 
     vk.verify_with_context(message, ctx, &sig)
+}
+
+#[macro_export]
+macro_rules! impl_mldsa_variant {
+    ($variant:ident, $seed:expr, $sk:expr, $vk:expr, $sig:expr) => {
+        use ml_dsa::$variant;
+        use mldsa_core::KeyPair as CoreKeyPair;
+
+        #[cfg(all(
+            not(target_feature = "atomics"),
+            target_family = "wasm",
+            feature = "talc"
+        ))]
+        #[global_allocator]
+        static TALC: talc::wasm::WasmDynamicTalc = talc::wasm::new_wasm_dynamic_allocator();
+
+        pub const SEED_SIZE: usize = $seed;
+        pub const SIGNING_KEY_SIZE: usize = $sk;
+        pub const VERIFYING_KEY_SIZE: usize = $vk;
+        pub const SIGNATURE_SIZE: usize = $sig;
+
+        pub type KeyPair = CoreKeyPair<VERIFYING_KEY_SIZE>;
+
+        pub fn generate_keypair() -> KeyPair {
+            mldsa_core::generate_keypair::<$variant, VERIFYING_KEY_SIZE>()
+        }
+
+        pub fn generate_keypair_from_seed(seed: &[u8; SEED_SIZE]) -> KeyPair {
+            mldsa_core::generate_keypair_from_seed::<$variant, VERIFYING_KEY_SIZE>(seed)
+        }
+
+        pub fn sign(
+            seed: &[u8; SEED_SIZE],
+            message: &[u8],
+            context: Option<&[u8]>,
+        ) -> [u8; SIGNATURE_SIZE] {
+            mldsa_core::sign::<$variant, SIGNATURE_SIZE>(seed, message, context)
+        }
+
+        pub fn verify(
+            vk: &[u8; VERIFYING_KEY_SIZE],
+            message: &[u8],
+            sig: &[u8; SIGNATURE_SIZE],
+            context: Option<&[u8]>,
+        ) -> bool {
+            mldsa_core::verify::<$variant, VERIFYING_KEY_SIZE, SIGNATURE_SIZE>(
+                vk, message, sig, context,
+            )
+        }
+    };
 }

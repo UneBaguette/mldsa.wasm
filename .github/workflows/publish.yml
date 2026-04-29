@@ -45,7 +45,7 @@ jobs:
       - name: Publish to crates.io
         run: |
           cargo publish -p mldsa-core
-          sleep 60
+          sleep 30
           cargo publish -p mldsa44
           cargo publish -p mldsa65
           cargo publish -p mldsa87
