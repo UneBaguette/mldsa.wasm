@@ -36,41 +36,6 @@ And a **unified** Rust crate, built on [`ml-dsa`](https://github.com/RustCrypto/
 | ML-DSA-65 | NIST Level 3   | 32 B | 1,952 bytes   | 3,309 bytes |
 | ML-DSA-87 | NIST Level 5   | 32 B | 2,592 bytes   | 4,627 bytes |
 
-## JavaScript / TypeScript
-
-### Standalone packages
-
-```bash
-npm install mldsa65-wasm
-```
-
-```ts
-import { generateKeypair, sign, verify } from 'mldsa65-wasm';
-
-// Generate a keypair
-const { seed, verifyingKey } = generateKeypair();
-
-// Sign a message (deterministic)
-const signature = sign(seed, new TextEncoder().encode('hello'));
-
-// Verify
-const valid = verify(verifyingKey, new TextEncoder().encode('hello'), signature);
-console.log(valid); // true
-```
-
-### Unified package with subpath exports
-
-```bash
-npm install mldsa-wasm-rs
-```
-
-```ts
-import { generateKeypair, sign, verify } from 'mldsa-wasm-rs/65';
-// or
-import { generateKeypair, sign, verify } from 'mldsa-wasm-rs/44';
-import { generateKeypair, sign, verify } from 'mldsa-wasm-rs/87';
-```
-
 ## Rust
 
 Each variant is a standalone crate:
@@ -115,6 +80,41 @@ let kp87 = mldsa87::generate_keypair();
 ```bash
 rustup target add wasm32-unknown-unknown
 cargo install wasm-bindgen-cli
+```
+
+## JavaScript / TypeScript
+
+### Standalone packages
+
+```bash
+npm install mldsa65-wasm
+```
+
+```ts
+import { generateKeypair, sign, verify } from 'mldsa65-wasm';
+
+// Generate a keypair
+const { seed, verifyingKey } = generateKeypair();
+
+// Sign a message (deterministic)
+const signature = sign(seed, new TextEncoder().encode('hello'));
+
+// Verify
+const valid = verify(verifyingKey, new TextEncoder().encode('hello'), signature);
+console.log(valid); // true
+```
+
+### Unified package with subpath exports
+
+```bash
+npm install mldsa-wasm-rs
+```
+
+```ts
+import { generateKeypair, sign, verify } from 'mldsa-wasm-rs/65';
+// or
+import { generateKeypair, sign, verify } from 'mldsa-wasm-rs/44';
+import { generateKeypair, sign, verify } from 'mldsa-wasm-rs/87';
 ```
 
 ### Native tests
