@@ -56,7 +56,11 @@ macro_rules! wasm_mldsa {
             }
 
             #[wasm_bindgen]
-            pub fn sign(seed: &str, message: &[u8], context: Option<Vec<u8>>) -> Result<String, JsError> {
+            pub fn sign(
+                seed: &str,
+                message: &[u8],
+                context: Option<Vec<u8>>,
+            ) -> Result<String, JsError> {
                 let seed_bytes = decode_fixed::<SEED_SIZE>(seed, "seed")?;
                 let ctx = context.as_deref();
                 Ok(encode(&super::sign(&seed_bytes, message, ctx)))
@@ -87,6 +91,7 @@ macro_rules! wasm_mldsa {
                 pub fn new(seed: &str) -> Result<Signer, JsError> {
                     let seed_bytes = decode_fixed::<SEED_SIZE>(seed, "seed")?;
                     let kp = super::generate_keypair_from_seed(&seed_bytes);
+
                     Ok(Signer {
                         seed: seed_bytes,
                         verifying_key: kp.verifying_key,

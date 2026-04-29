@@ -91,12 +91,27 @@ npm install mldsa65-wasm
 ```
 
 ```ts
-import { generateKeypair, sign, verify } from 'mldsa65-wasm';
+import { Signer, generateKeypair, sign, verify } from 'mldsa65-wasm';
+
+//=========== Safe (seed lives inside WASM memory) ===========
+
+// Automatic cleanup (modern browsers)
+const signer = new Signer(seed); // Signer generates the keypair with seed argument
+
+// Sign a message
+const sig = signer.sign(message);
+// seed zeroized when signer is GC'd
+
+// Verify
+const valid = verify(signer.verifyingKey, new TextEncoder().encode('hello'), sig);
+console.log(valid); // true
+
+//=========== !WARNING! - UNSAFE ===========
 
 // Generate a keypair
 const { seed, verifyingKey } = generateKeypair();
 
-// Sign a message (deterministic)
+// Sign a message (deterministic but unsafe)
 const signature = sign(seed, new TextEncoder().encode('hello'));
 
 // Verify
@@ -116,6 +131,12 @@ import { generateKeypair, sign, verify } from 'mldsa-wasm-rs/65';
 import { generateKeypair, sign, verify } from 'mldsa-wasm-rs/44';
 import { generateKeypair, sign, verify } from 'mldsa-wasm-rs/87';
 ```
+
+> **Memory management:** In all modern browsers (and wasm-bindgen ≥ 0.2.91), WASM memory is freed automatically via the TC39 weak references proposal when the JS object goes out of scope.
+>
+> In practice, you often don't need to think about this. For deterministic cleanup or environments without weak reference support (older browsers, some Node.js setups), use `using` (TypeScript 5.2+ / ES2026) or call `.free()` manually.
+>
+> Never call `.free()` on a `using`-managed instance otherwise it will double-free.
 
 ### Native tests
 
