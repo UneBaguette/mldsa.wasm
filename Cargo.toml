@@ -15,7 +15,7 @@ keywords = ["crypto", "signature", "post-quantum", "wasm", "wasm-bindgen"]
 categories = ["cryptography", "wasm"]
 
 [workspace.dependencies]
-ml-dsa = { version = "0.1.0-rc", features = ["zeroize", "rand_core"] }
+ml-dsa = { version = "0.1.0-rc.9", features = ["zeroize", "rand_core"] }
 getrandom = { version = "0.4", features = ["sys_rng"] }
 zeroize = { version = "1" }
 serde = { version = "1.0", features = ["derive"] }
