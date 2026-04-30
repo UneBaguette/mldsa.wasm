@@ -29,7 +29,7 @@ pub fn decode_fixed<const N: usize>(s: &str, context: &str) -> Result<[u8; N], J
 
 #[cfg(feature = "wasm")]
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi)]
+#[tsify(into_wasm_abi)] // TODO: Remove once deprecated
 pub struct GenerateKeypairResult {
     pub seed: String,
     #[serde(rename = "verifyingKey")]
@@ -49,11 +49,23 @@ macro_rules! wasm_mldsa {
             #[wasm_bindgen(js_name = "generateKeypair")]
             pub fn generate_keypair_wasm() -> GenerateKeypairResult {
                 let kp = super::generate_keypair();
+
                 GenerateKeypairResult {
                     seed: encode(&kp.seed),
                     verifying_key: encode(&kp.verifying_key),
                 }
             }
+
+            // XXX: For future tsify, don't use yet.
+            // #[wasm_bindgen(js_name = "generateKeypair")]
+            // pub fn generate_keypair_wasm() -> Result<tsify::Ts<GenerateKeypairResult>, JsError> {
+            //     let kp = super::generate_keypair();
+            //
+            //     Ok(GenerateKeypairResult {
+            //         seed: encode(&kp.seed),
+            //         verifying_key: encode(&kp.verifying_key),
+            //     }.into_ts()?)
+            // }
 
             #[wasm_bindgen]
             pub fn sign(
@@ -63,6 +75,7 @@ macro_rules! wasm_mldsa {
             ) -> Result<String, JsError> {
                 let seed_bytes = decode_fixed::<SEED_SIZE>(seed, "seed")?;
                 let ctx = context.as_deref();
+
                 Ok(encode(&super::sign(&seed_bytes, message, ctx)))
             }
 
@@ -76,6 +89,7 @@ macro_rules! wasm_mldsa {
                 let vk_bytes = decode_fixed::<VERIFYING_KEY_SIZE>(vk, "verifyingKey")?;
                 let sig_bytes = decode_fixed::<SIGNATURE_SIZE>(signature, "signature")?;
                 let ctx = context.as_deref();
+
                 Ok(super::verify(&vk_bytes, message, &sig_bytes, ctx))
             }
 
@@ -105,6 +119,7 @@ macro_rules! wasm_mldsa {
 
                 pub fn sign(&self, message: &[u8], context: Option<Vec<u8>>) -> String {
                     let ctx = context.as_deref();
+
                     encode(&super::sign(&self.seed, message, ctx))
                 }
             }
