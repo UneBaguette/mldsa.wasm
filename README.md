@@ -91,22 +91,34 @@ npm install mldsa65-wasm
 ```
 
 ```ts
-import { Signer, generateKeypair, sign, verify } from 'mldsa65-wasm';
+import { Signer, verify } from 'mldsa65-wasm';
 
 //=========== Safe (seed lives inside WASM memory) ===========
 
-// Automatic cleanup (modern browsers)
-const signer = new Signer(seed); // Signer generates the keypair with seed argument
+// seed is a base64-encoded 32-byte value that deterministically derives the ML-DSA keypair.
+// You are responsible for providing it. Store it securely and never expose it!
+// The seed stays inside WASM memory and is zeroized when the Signer is freed or garbage collected.
+const signer = new Signer(seed);
 
 // Sign a message
-const sig = signer.sign(message);
+const sig = signer.sign(new TextEncoder().encode('hello'));
 // seed zeroized when signer is GC'd
 
+// With optional context (per ML-DSA spec)
+const sigWithCtx = signer.sign(new TextEncoder().encode('hello'), new TextEncoder().encode('ctx'));
+
+const vk = signer.verifyingKey();
+
 // Verify
-const valid = verify(signer.verifyingKey, new TextEncoder().encode('hello'), sig);
+const valid = verify(vk, new TextEncoder().encode('hello'), sig);
 console.log(valid); // true
 
 //=========== !WARNING! - UNSAFE ===========
+
+// generateKeypair generates a fresh random seed via the system RNG.
+// The seed is returned to JS memory.
+// You are responsible for zeroizing it after use.
+import { generateKeypair, sign } from 'mldsa65-wasm';
 
 // Generate a keypair
 const { seed, verifyingKey } = generateKeypair();
@@ -126,10 +138,10 @@ npm install mldsa-wasm-rs
 ```
 
 ```ts
-import { generateKeypair, sign, verify } from 'mldsa-wasm-rs/65';
+import { Signer, generateKeypair, sign, verify } from 'mldsa-wasm-rs/65';
 // or
-import { generateKeypair, sign, verify } from 'mldsa-wasm-rs/44';
-import { generateKeypair, sign, verify } from 'mldsa-wasm-rs/87';
+import { Signer, generateKeypair, sign, verify } from 'mldsa-wasm-rs/44';
+import { Signer, generateKeypair, sign, verify } from 'mldsa-wasm-rs/87';
 ```
 
 > **Memory management:** In all modern browsers (and wasm-bindgen ≥ 0.2.91), WASM memory is freed automatically via the TC39 weak references proposal when the JS object goes out of scope.
