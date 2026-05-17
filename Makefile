@@ -187,21 +187,22 @@ wasm-clean:
 .PHONY: publish-cargo publish-all
 
 publish-npm44: wasm44
-	cd $(PKG_DIR)/44 && npm publish --access public
+	cd $(PKG_DIR)/44 && npm publish
 
 publish-npm65: wasm65
-	cd $(PKG_DIR)/65 && npm publish --access public
+	cd $(PKG_DIR)/65 && npm publish
 
 publish-npm87: wasm87
-	cd $(PKG_DIR)/87 && npm publish --access public
+	cd $(PKG_DIR)/87 && npm publish
 
 publish-npm-unified: wasm-unified
-	cd $(PKG_DIR)/unified && npm publish --access public
+	cd $(PKG_DIR)/unified && npm publish
 
 publish-npm: publish-npm44 publish-npm65 publish-npm87 publish-npm-unified
 
 publish-cargo:
 	$(CARGO) publish -p mldsa-core
+	sleep 60
 	$(CARGO) publish -p mldsa44
 	$(CARGO) publish -p mldsa65
 	$(CARGO) publish -p mldsa87
