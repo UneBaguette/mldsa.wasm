@@ -3,10 +3,10 @@
 
 pub mod wasm;
 
-pub mod tests;
+mod tests;
 
 use ml_dsa::{
-    EncodedVerifyingKey, KeyGen, MlDsaParams, Signature, VerifyingKey, signature::Keypair,
+    EncodedVerifyingKey, Generate, MlDsaParams, Signature, VerifyingKey, signature::Keypair,
     signature::rand_core::UnwrapErr,
 };
 use zeroize::Zeroize;
@@ -24,13 +24,13 @@ impl<const VK: usize> Drop for KeyPair<VK> {
 
 pub fn generate_keypair<P, const VK: usize>() -> KeyPair<VK>
 where
-    P: KeyGen<KeyPair = ml_dsa::SigningKey<P>>,
     P: MlDsaParams,
 {
     let mut rng = UnwrapErr(getrandom::SysRng);
-    let kp = P::key_gen(&mut rng);
-    let seed: [u8; 32] = kp.to_seed().into();
-    let vk = kp.verifying_key().encode();
+    let key: ml_dsa::SigningKey<P> = Generate::generate_from_rng(&mut rng);
+
+    let seed: [u8; 32] = key.to_seed().into();
+    let vk = key.verifying_key().encode();
 
     let mut vk_bytes = [0u8; VK];
 
@@ -44,12 +44,12 @@ where
 
 pub fn generate_keypair_from_seed<P, const VK: usize>(seed: &[u8; 32]) -> KeyPair<VK>
 where
-    P: KeyGen<KeyPair = ml_dsa::SigningKey<P>>,
     P: MlDsaParams,
 {
     let seed_arr = ml_dsa::B32::from(*seed);
-    let kp = P::from_seed(&seed_arr);
-    let vk = kp.verifying_key().encode();
+    let sig_key = ml_dsa::SigningKey::<P>::from_seed(&seed_arr);
+
+    let vk = sig_key.verifying_key().encode();
     let mut vk_bytes = [0u8; VK];
 
     vk_bytes.copy_from_slice(&vk);
@@ -66,24 +66,23 @@ pub fn sign<P, const SIG: usize>(
     context: Option<&[u8]>,
 ) -> [u8; SIG]
 where
-    P: KeyGen<KeyPair = ml_dsa::SigningKey<P>>,
     P: MlDsaParams,
 {
     let ctx = context.unwrap_or(&[]);
     assert!(ctx.len() <= 255, "context must be at most 255 bytes");
 
     let seed_arr = ml_dsa::B32::from(*seed);
-    let kp = P::from_seed(&seed_arr);
+    let sig_key = ml_dsa::SigningKey::<P>::from_seed(&seed_arr);
 
-    let sig = kp
-        .signing_key()
+    let esk = sig_key.expanded_key();
+
+    let sig = esk
         .sign_deterministic(message, ctx)
         .expect("sign_deterministic failed despite valid context");
 
-    let encoded = sig.encode();
     let mut sig_bytes = [0u8; SIG];
 
-    sig_bytes.copy_from_slice(&encoded);
+    sig_bytes.copy_from_slice(&sig.encode());
 
     sig_bytes
 }
