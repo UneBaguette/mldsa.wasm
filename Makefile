@@ -184,7 +184,7 @@ wasm-clean:
 # Pub
 
 .PHONY: publish-npm44 publish-npm65 publish-npm87 publish-npm-unified publish-npm
-.PHONY: publish-cargo publish-all
+.PHONY: publish-core publish-crates publish-all
 
 publish-npm44: wasm44
 	cd $(PKG_DIR)/44 && npm publish
@@ -200,14 +200,16 @@ publish-npm-unified: wasm-unified
 
 publish-npm: publish-npm44 publish-npm65 publish-npm87 publish-npm-unified
 
-publish-cargo:
+publish-core:
 	$(CARGO) publish -p mldsa-core
 	sleep 60
+
+publish-crates:
 	$(CARGO) publish -p mldsa44
 	$(CARGO) publish -p mldsa65
 	$(CARGO) publish -p mldsa87
 
-publish-all: publish-cargo publish-npm
+publish-all: publish-core publish-crates publish-npm
 
 .PHONY: all clean-all
 
