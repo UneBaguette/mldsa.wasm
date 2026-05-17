@@ -364,7 +364,7 @@ dependencies = [
 
 [[package]]
 name = "mldsa-core"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "base64",
  "getrandom",
@@ -378,7 +378,7 @@ dependencies = [
 
 [[package]]
 name = "mldsa44"
-version = "0.2.1"
+version = "0.2.0"
 dependencies = [
  "base64",
  "getrandom",
@@ -394,7 +394,7 @@ dependencies = [
 
 [[package]]
 name = "mldsa65"
-version = "0.2.1"
+version = "0.2.0"
 dependencies = [
  "base64",
  "getrandom",
@@ -410,7 +410,7 @@ dependencies = [
 
 [[package]]
 name = "mldsa87"
-version = "0.2.1"
+version = "0.2.0"
 dependencies = [
  "base64",
  "getrandom",
