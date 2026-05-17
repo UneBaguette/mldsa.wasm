@@ -113,7 +113,9 @@ version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77727bb15fa921304124b128af125e7e3b968275d1b108b379190264f4423710"
 dependencies = [
+ "getrandom",
  "hybrid-array",
+ "rand_core",
 ]
 
 [[package]]
@@ -345,16 +347,16 @@ dependencies = [
 
 [[package]]
 name = "ml-dsa"
-version = "0.1.0-rc.9"
+version = "0.1.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3a596bd65985e2b343c3fd6cc4ade15cdd76da66b15936cfbce72ea661cdbb2"
+checksum = "163f15320f3fba11760c373af52d7f69d638482c2c350d877fb06513b1c3137c"
 dependencies = [
  "const-oid",
+ "crypto-common",
  "ctutils",
  "hybrid-array",
  "module-lattice",
  "pkcs8",
- "rand_core",
  "sha3",
  "signature",
  "zeroize",
@@ -424,9 +426,9 @@ dependencies = [
 
 [[package]]
 name = "module-lattice"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc7c90d33a0dac244570c26461d761ffaeadb3bfc2b17cc625ae2185cafdffae"
+checksum = "0c61b87c9683ab7cb1c6871d261ad5479b6b10ceb52c4352aaca3b5d35a8febe"
 dependencies = [
  "ctutils",
  "hybrid-array",
@@ -631,9 +633,9 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "signature"
-version = "3.0.0-rc.10"
+version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f1880df446116126965eeec169136b2e0251dba37c6223bcc819569550edea3"
+checksum = "28d567dcbaf0049cb8ac2608a76cd95ff9e4412e1899d389ee400918ca7537f5"
 dependencies = [
  "digest",
  "rand_core",
