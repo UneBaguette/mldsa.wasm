@@ -29,19 +29,22 @@ import { Signer, verify } from 'mldsa44-wasm';
 
 //=========== Safe (seed lives inside WASM memory) ===========
 
-// seed is a base64-encoded 32-byte value that deterministically derives the ML-DSA keypair.
+// seed is a 32-byte Uint8Array that deterministically derives the ML-DSA keypair.
 // You are responsible for providing it. Store it securely and never expose it!
 // The seed stays inside WASM memory and is zeroized when the Signer is freed or garbage collected.
 const signer = new Signer(seed);
 
 // Sign a message
 const sig = signer.sign(new TextEncoder().encode('hello'));
-// seed zeroized when signer is GC'd
 
 // With optional context (per ML-DSA spec)
-const sigWithCtx = signer.sign(new TextEncoder().encode('hello'), new TextEncoder().encode('ctx'));
+const sigWithCtx = signer.sign(
+    new TextEncoder().encode('hello'),
+    new TextEncoder().encode('vexahub:v1:share')
+);
 
-const vk = signer.verifyingKey();
+// Get the verifying (public) key
+const vk = signer.verifyingKey(); // Uint8Array
 
 // Verify
 const valid = verify(vk, new TextEncoder().encode('hello'), sig);
@@ -50,19 +53,25 @@ console.log(valid); // true
 //=========== !WARNING! - UNSAFE ===========
 
 // generateKeypair generates a fresh random seed via the system RNG.
-// The seed is returned to JS memory.
-// You are responsible for zeroizing it after use.
-import { generateKeypair, sign } from 'mldsa65-wasm';
+// The seed is returned to JS memory as a Uint8Array.
+// You are responsible for zeroizing it after use (e.g. seed.fill(0)).
+import { generateKeypair, generateKeypairFromSeed, sign } from 'mldsa44-wasm';
 
 // Generate a keypair
-const { seed, verifyingKey } = generateKeypair();
+const { seed, verifyingKey } = generateKeypair(); // both Uint8Array
 
-// Sign a message (deterministic but unsafe)
+// Reproduce a keypair from an existing seed
+const kp = generateKeypairFromSeed(seed); // kp.verifyingKey === verifyingKey
+
+// Sign a message (deterministic but seed exposed to JS heap)
 const signature = sign(seed, new TextEncoder().encode('hello'));
 
 // Verify
-const valid = verify(verifyingKey, new TextEncoder().encode('hello'), signature);
-console.log(valid); // true
+const ok = verify(verifyingKey, new TextEncoder().encode('hello'), signature);
+console.log(ok); // true
+
+// Zeroize the seed when done
+seed.fill(0);
 ```
 
 > **Memory management:** In all modern browsers (and wasm-bindgen ≥ 0.2.91), WASM memory is freed automatically via the TC39 weak references proposal when the JS object goes out of scope.

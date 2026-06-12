@@ -207,7 +207,11 @@ macro_rules! test_mldsa {
 
         #[cfg(all(target_arch = "wasm32", test, feature = "wasm"))]
         mod wasm_tests {
-            use super::wasm::{generate_keypair_wasm, sign as sign_wasm, verify as verify_wasm};
+            use super::*;
+            use super::wasm::{
+                generate_keypair_wasm, generate_keypair_from_seed_wasm,
+                sign as sign_wasm, verify as verify_wasm, Signer,
+            };
             use wasm_bindgen_test::*;
 
             // correct
@@ -218,6 +222,17 @@ macro_rules! test_mldsa {
                 let sig = sign_wasm(&kp.seed, b"hello wasm", None).unwrap();
 
                 assert!(verify_wasm(&kp.verifying_key, b"hello wasm", &sig, None).unwrap());
+            }
+
+            #[wasm_bindgen_test]
+            fn wasm_sign_verify_with_context() {
+                let kp = generate_keypair_wasm();
+                let ctx = Some(b"vexahub:v1:share".to_vec());
+                let sig = sign_wasm(&kp.seed, b"hello", ctx.clone()).unwrap();
+
+                assert!(verify_wasm(&kp.verifying_key, b"hello", &sig, ctx).unwrap());
+                assert!(!verify_wasm(&kp.verifying_key, b"hello", &sig, None).unwrap());
+                assert!(!verify_wasm(&kp.verifying_key, b"hello", &sig, Some(b"wrong".to_vec())).unwrap());
             }
 
             #[wasm_bindgen_test]
@@ -235,6 +250,90 @@ macro_rules! test_mldsa {
                 let sig2 = sign_wasm(&kp.seed, b"test", None).unwrap();
 
                 assert_eq!(sig1, sig2);
+            }
+
+            #[wasm_bindgen_test]
+            fn wasm_keypair_sizes() {
+                let kp = generate_keypair_wasm();
+
+                assert_eq!(kp.seed.len(), SEED_SIZE);
+                assert_eq!(kp.verifying_key.len(), VERIFYING_KEY_SIZE);
+            }
+
+            #[wasm_bindgen_test]
+            fn wasm_signature_size() {
+                let kp = generate_keypair_wasm();
+                let sig = sign_wasm(&kp.seed, b"test", None).unwrap();
+
+                assert_eq!(sig.len(), SIGNATURE_SIZE);
+            }
+
+            // generate_keypair_from_seed
+
+            #[wasm_bindgen_test]
+            fn wasm_from_seed_reproduces_keypair() {
+                let kp = generate_keypair_wasm();
+                let kp2 = generate_keypair_from_seed_wasm(&kp.seed).unwrap();
+
+                assert_eq!(kp.verifying_key, kp2.verifying_key);
+            }
+
+            #[wasm_bindgen_test]
+            fn wasm_from_seed_cross_verify() {
+                let kp = generate_keypair_wasm();
+                let kp2 = generate_keypair_from_seed_wasm(&kp.seed).unwrap();
+                let sig = sign_wasm(&kp.seed, b"test", None).unwrap();
+
+                assert!(verify_wasm(&kp2.verifying_key, b"test", &sig, None).unwrap());
+            }
+
+            // signer
+
+            #[wasm_bindgen_test]
+            fn wasm_signer_roundtrip() {
+                let kp = generate_keypair_wasm();
+                let signer = Signer::new(&kp.seed).unwrap();
+                let sig = signer.sign(b"hello", None);
+
+                assert!(verify_wasm(&kp.verifying_key, b"hello", &sig, None).unwrap());
+            }
+
+            #[wasm_bindgen_test]
+            fn wasm_signer_verifying_key_matches() {
+                let kp = generate_keypair_wasm();
+                let signer = Signer::new(&kp.seed).unwrap();
+
+                assert_eq!(signer.verifying_key(), kp.verifying_key);
+            }
+
+            #[wasm_bindgen_test]
+            fn wasm_signer_deterministic() {
+                let kp = generate_keypair_wasm();
+                let signer = Signer::new(&kp.seed).unwrap();
+                let sig1 = signer.sign(b"test", None);
+                let sig2 = signer.sign(b"test", None);
+
+                assert_eq!(sig1, sig2);
+            }
+
+            #[wasm_bindgen_test]
+            fn wasm_signer_matches_standalone_sign() {
+                let kp = generate_keypair_wasm();
+                let signer = Signer::new(&kp.seed).unwrap();
+                let sig_signer = signer.sign(b"test", None);
+                let sig_standalone = sign_wasm(&kp.seed, b"test", None).unwrap();
+
+                assert_eq!(sig_signer, sig_standalone);
+            }
+
+            #[wasm_bindgen_test]
+            fn wasm_signer_with_context() {
+                let kp = generate_keypair_wasm();
+                let signer = Signer::new(&kp.seed).unwrap();
+                let ctx = Some(b"vexahub:v1:share".to_vec());
+                let sig = signer.sign(b"hello", ctx.clone());
+
+                assert!(verify_wasm(&kp.verifying_key, b"hello", &sig, ctx).unwrap());
             }
 
             // reject
@@ -256,85 +355,71 @@ macro_rules! test_mldsa {
                 assert!(!verify_wasm(&kp2.verifying_key, b"hello", &sig, None).unwrap());
             }
 
-            // errors!
+            // errors
 
             #[wasm_bindgen_test]
-            fn wasm_invalid_seed_base64() {
-                assert!(sign_wasm("not-valid!!!", b"test", None).is_err());
+            fn wasm_sign_wrong_seed_length() {
+                assert!(sign_wasm(&[0u8; 16], b"test", None).is_err());
             }
 
             #[wasm_bindgen_test]
-            fn wasm_wrong_seed_length() {
-                use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
-
-                let short = URL_SAFE_NO_PAD.encode(&[0u8; 16]);
-
-                assert!(sign_wasm(&short, b"test", None).is_err());
+            fn wasm_sign_seed_too_long() {
+                assert!(sign_wasm(&[0u8; 64], b"test", None).is_err());
             }
 
             #[wasm_bindgen_test]
-            fn wasm_seed_too_long() {
-                use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
-
-                let long = URL_SAFE_NO_PAD.encode(&[0u8; 64]);
-
-                assert!(sign_wasm(&long, b"test", None).is_err());
+            fn wasm_sign_empty_seed() {
+                assert!(sign_wasm(&[], b"test", None).is_err());
             }
 
             #[wasm_bindgen_test]
-            fn wasm_invalid_vk_base64() {
+            fn wasm_verify_wrong_vk_length() {
                 let kp = generate_keypair_wasm();
                 let sig = sign_wasm(&kp.seed, b"test", None).unwrap();
 
-                assert!(verify_wasm("bad!!!", b"test", &sig, None).is_err());
+                assert!(verify_wasm(&[0u8; 16], b"test", &sig, None).is_err());
             }
 
             #[wasm_bindgen_test]
-            fn wasm_invalid_sig_base64() {
+            fn wasm_verify_wrong_sig_length() {
                 let kp = generate_keypair_wasm();
 
-                assert!(verify_wasm(&kp.verifying_key, b"test", "bad!!!", None).is_err());
+                assert!(verify_wasm(&kp.verifying_key, b"test", &[0u8; 16], None).is_err());
             }
 
             #[wasm_bindgen_test]
-            fn wasm_wrong_vk_length() {
-                use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
-
-                let kp = generate_keypair_wasm();
-                let sig = sign_wasm(&kp.seed, b"test", None).unwrap();
-                let short_vk = URL_SAFE_NO_PAD.encode(&[0u8; 16]);
-
-                assert!(verify_wasm(&short_vk, b"test", &sig, None).is_err());
-            }
-
-            #[wasm_bindgen_test]
-            fn wasm_wrong_sig_length() {
-                use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
-
-                let kp = generate_keypair_wasm();
-                let short_sig = URL_SAFE_NO_PAD.encode(&[0u8; 16]);
-
-                assert!(verify_wasm(&kp.verifying_key, b"test", &short_sig, None).is_err());
-            }
-
-            #[wasm_bindgen_test]
-            fn wasm_empty_string_seed_fails() {
-                assert!(sign_wasm("", b"test", None).is_err());
-            }
-
-            #[wasm_bindgen_test]
-            fn wasm_empty_string_vk_fails() {
+            fn wasm_verify_empty_vk() {
                 let kp = generate_keypair_wasm();
                 let sig = sign_wasm(&kp.seed, b"test", None).unwrap();
 
-                assert!(verify_wasm("", b"test", &sig, None).is_err());
+                assert!(verify_wasm(&[], b"test", &sig, None).is_err());
             }
 
             #[wasm_bindgen_test]
-            fn wasm_empty_string_sig_fails() {
+            fn wasm_verify_empty_sig() {
                 let kp = generate_keypair_wasm();
 
-                assert!(verify_wasm(&kp.verifying_key, b"test", "", None).is_err());
+                assert!(verify_wasm(&kp.verifying_key, b"test", &[], None).is_err());
+            }
+
+            #[wasm_bindgen_test]
+            fn wasm_from_seed_wrong_length() {
+                assert!(generate_keypair_from_seed_wasm(&[0u8; 16]).is_err());
+            }
+
+            #[wasm_bindgen_test]
+            fn wasm_from_seed_empty() {
+                assert!(generate_keypair_from_seed_wasm(&[]).is_err());
+            }
+
+            #[wasm_bindgen_test]
+            fn wasm_signer_wrong_seed_length() {
+                assert!(Signer::new(&[0u8; 16]).is_err());
+            }
+
+            #[wasm_bindgen_test]
+            fn wasm_signer_empty_seed() {
+                assert!(Signer::new(&[]).is_err());
             }
         }
     };

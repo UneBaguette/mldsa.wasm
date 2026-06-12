@@ -32,12 +32,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
-name = "base64"
-version = "0.22.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
-
-[[package]]
 name = "base64ct"
 version = "1.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -354,13 +348,13 @@ dependencies = [
 
 [[package]]
 name = "mldsa-core"
-version = "0.2.3"
+version = "0.3.0"
 dependencies = [
- "base64",
  "getrandom",
  "ml-dsa",
  "serde",
  "serde-wasm-bindgen",
+ "serde_bytes",
  "tsify",
  "wasm-bindgen",
  "zeroize",
@@ -368,13 +362,14 @@ dependencies = [
 
 [[package]]
 name = "mldsa44"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
- "base64",
  "getrandom",
  "ml-dsa",
  "mldsa-core",
+ "serde",
  "serde-wasm-bindgen",
+ "serde_bytes",
  "talc",
  "tsify",
  "wasm-bindgen",
@@ -384,13 +379,14 @@ dependencies = [
 
 [[package]]
 name = "mldsa65"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
- "base64",
  "getrandom",
  "ml-dsa",
  "mldsa-core",
+ "serde",
  "serde-wasm-bindgen",
+ "serde_bytes",
  "talc",
  "tsify",
  "wasm-bindgen",
@@ -400,13 +396,14 @@ dependencies = [
 
 [[package]]
 name = "mldsa87"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
- "base64",
  "getrandom",
  "ml-dsa",
  "mldsa-core",
+ "serde",
  "serde-wasm-bindgen",
+ "serde_bytes",
  "talc",
  "tsify",
  "wasm-bindgen",
@@ -559,6 +556,16 @@ dependencies = [
  "js-sys",
  "serde",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "serde_bytes"
+version = "0.11.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a5d440709e79d88e51ac01c4b72fc6cb7314017bb7da9eeff678aa94c10e3ea8"
+dependencies = [
+ "serde",
+ "serde_core",
 ]
 
 [[package]]

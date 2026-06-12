@@ -16,7 +16,7 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 default = []
-wasm = ["dep:wasm-bindgen", "dep:serde-wasm-bindgen", "dep:tsify", "dep:base64", "dep:zeroize", "mldsa-core/wasm"]
+wasm = ["dep:wasm-bindgen", "dep:serde-wasm-bindgen", "dep:tsify", "dep:zeroize", "dep:serde", "dep:serde_bytes", "mldsa-core/wasm"]
 talc = ["dep:talc"]
 
 [dependencies]
@@ -24,11 +24,12 @@ ml-dsa.workspace = true
 mldsa-core = { workspace = true }
 
 # wasm
-base64 = { workspace = true, optional = true }
 wasm-bindgen = { workspace = true, optional = true }
 serde-wasm-bindgen = { workspace = true, optional = true }
 tsify = { workspace = true, optional = true }
 zeroize = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
+serde_bytes = { workspace = true, optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.4", features = ["wasm_js"] }
