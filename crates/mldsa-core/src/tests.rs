@@ -207,11 +207,11 @@ macro_rules! test_mldsa {
 
         #[cfg(all(target_arch = "wasm32", test, feature = "wasm"))]
         mod wasm_tests {
-            use super::*;
             use super::wasm::{
-                generate_keypair_wasm, generate_keypair_from_seed_wasm,
-                sign as sign_wasm, verify as verify_wasm, Signer,
+                Signer, generate_keypair_from_seed_wasm, generate_keypair_wasm, sign as sign_wasm,
+                verify as verify_wasm,
             };
+            use super::*;
             use wasm_bindgen_test::*;
 
             // correct
@@ -232,7 +232,10 @@ macro_rules! test_mldsa {
 
                 assert!(verify_wasm(&kp.verifying_key, b"hello", &sig, ctx).unwrap());
                 assert!(!verify_wasm(&kp.verifying_key, b"hello", &sig, None).unwrap());
-                assert!(!verify_wasm(&kp.verifying_key, b"hello", &sig, Some(b"wrong".to_vec())).unwrap());
+                assert!(
+                    !verify_wasm(&kp.verifying_key, b"hello", &sig, Some(b"wrong".to_vec()))
+                        .unwrap()
+                );
             }
 
             #[wasm_bindgen_test]
