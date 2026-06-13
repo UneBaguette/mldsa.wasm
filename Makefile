@@ -75,6 +75,7 @@ wasm$(1):
 	  --out-name mldsa$(1) \
 	  $(TARGET_DIR)/mldsa$(1).wasm
 	@mv $(PKG_DIR)/$(1)/bundler/mldsa$(1)_bg.wasm $(PKG_DIR)/$(1)/mldsa$(1)_bg.wasm
+	@cp $(PKG_DIR)/$(1)/bundler/mldsa$(1)_bg.js $(PKG_DIR)/$(1)/mldsa$(1)_bg.js
 	@rm -f $(PKG_DIR)/$(1)/web/mldsa$(1)_bg.wasm \
 	       $(PKG_DIR)/$(1)/node/mldsa$(1)_bg.wasm
 	$(WASM_OPT) $(WASM_OPT_FLAGS) \
