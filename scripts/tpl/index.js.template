@@ -4,4 +4,4 @@
 // mldsa{{N}}-wasm-rs. Auto-generated entry point.
 // Do not edit directly!
 
-export { generateKeypair, sign, verify } from './bundler/mldsa{{N}}.js';
+export { generateKeypair, generateKeypairFromSeed, sign, verify, Signer } from './bundler/mldsa{{N}}.js';

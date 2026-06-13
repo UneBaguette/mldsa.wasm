@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3
         with:
-          node-version: '24.15.0' # lts
+          node-version: '24.16.0' # lts
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install wasm-pack
