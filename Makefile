@@ -117,7 +117,7 @@ wasm$(1):
 	      default: './web/mldsa$(1).js' \
 	    }}, \
 	    files: ['bundler/','web/','node/','index.js','index.d.ts', \
-	            'mldsa$(1)_bg.wasm','README.md','LICENSE-MIT','LICENSE-APACHE'], \
+	            'mldsa$(1)_bg.wasm','mldsa$(1)_bg.js','README.md','LICENSE-MIT','LICENSE-APACHE'], \
 	    keywords: ['ml-dsa','ml-dsa-$(1)','fips-204','dilithium','signature', \
 	               'post-quantum','wasm','crypto'] \
 	  }; \
