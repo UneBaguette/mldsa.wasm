@@ -12,7 +12,7 @@ macro_rules! wasm_mldsa {
             use wasm_bindgen::prelude::*;
             use zeroize::Zeroize;
 
-            /// Result of `generateKeypair`. Both fields are base64url (no-pad) encoded.
+            /// Result of `generateKeypair`.
             /// The seed is a 32-byte random value generated via the system RNG.
             /// It deterministically derives the full ML-DSA keypair and must be stored
             /// securely. It is equivalent to a private key.
@@ -20,9 +20,9 @@ macro_rules! wasm_mldsa {
             #[tsify(into_wasm_abi)] // TODO: Remove once deprecated
             #[serde(rename_all = "camelCase")]
             pub struct GenerateKeypairResult {
-                #[serde(with = "serde_bytes")]
+                #[tsify(type = "Uint8Array")]
                 pub seed: Vec<u8>,
-                #[serde(with = "serde_bytes")]
+                #[tsify(type = "Uint8Array")]
                 pub verifying_key: Vec<u8>,
             }
 
@@ -41,6 +41,10 @@ macro_rules! wasm_mldsa {
                 }
             }
 
+            /// Reproduces an ML-DSA keypair from an existing 32-byte seed.
+            ///
+            /// # Errors
+            /// Throws if `seed` is not exactly 32 bytes.
             #[wasm_bindgen(js_name = "generateKeypairFromSeed")]
             pub fn generate_keypair_from_seed_wasm(
                 seed: &[u8],
@@ -75,7 +79,7 @@ macro_rules! wasm_mldsa {
             /// Prefer `Signer` for repeated signing.
             ///
             /// # Errors
-            /// Throws if `seed` is not valid base64url or not exactly 32 bytes.
+            /// Throws if `seed` is not exactly 32 bytes.
             #[wasm_bindgen]
             pub fn sign(
                 seed: &[u8],
@@ -92,7 +96,7 @@ macro_rules! wasm_mldsa {
             /// Verifies an ML-DSA signature.
             ///
             /// # Errors
-            /// Throws if `vk`, or `signature` are not valid base64url or have incorrect length.
+            /// Throws if `vk` or `signature` have incorrect length.
             #[wasm_bindgen]
             pub fn verify(
                 vk: &[u8],
@@ -131,11 +135,11 @@ macro_rules! wasm_mldsa {
 
             #[wasm_bindgen]
             impl Signer {
-                /// Creates a new Signer from a base64url-encoded seed.
+                /// Creates a new Signer from a 32-byte seed.
                 /// The keypair is derived internally from the seed.
                 ///
                 /// # Errors
-                /// Throws if `seed` is not valid base64url or not exactly 32 bytes.
+                /// Throws if `seed` is not exactly 32 bytes.
                 #[wasm_bindgen(constructor)]
                 pub fn new(seed: &[u8]) -> Result<Self, JsError> {
                     let seed_arr: [u8; SEED_SIZE] = seed
@@ -150,13 +154,13 @@ macro_rules! wasm_mldsa {
                     })
                 }
 
-                /// Returns the base64url-encoded verifying key (public key).
+                /// Returns the verifying key (public key) as raw bytes.
                 #[wasm_bindgen(js_name = "verifyingKey")]
                 pub fn verifying_key(&self) -> Vec<u8> {
                     self.verifying_key.to_vec()
                 }
 
-                /// Signs a message and returns a base64url-encoded signature.
+                /// Signs a message and returns the signature bytes.
                 /// An optional context byte string can be provided per the ML-DSA spec.
                 pub fn sign(&self, message: &[u8], context: Option<Vec<u8>>) -> Vec<u8> {
                     super::sign(&self.seed, message, context.as_deref()).to_vec()

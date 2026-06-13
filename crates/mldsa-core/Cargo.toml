@@ -12,7 +12,7 @@ publish = true
 
 [features]
 default = []
-wasm = ["dep:wasm-bindgen", "dep:serde-wasm-bindgen", "dep:tsify", "dep:serde", "dep:serde_bytes"]
+wasm = ["dep:wasm-bindgen", "dep:serde-wasm-bindgen", "dep:tsify", "dep:serde"]
 
 [dependencies]
 ml-dsa.workspace = true
@@ -24,4 +24,3 @@ wasm-bindgen = { workspace = true, optional = true }
 serde-wasm-bindgen = { workspace = true, optional = true }
 tsify = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
-serde_bytes = { workspace = true, optional = true }

@@ -21,11 +21,10 @@ zeroize = { version = "1" }
 serde = { version = "1.0", features = ["derive"] }
 
 # WASM
-wasm-bindgen = { version = "=0.2.121" }
+wasm-bindgen = { version = "=0.2.123" }
 serde-wasm-bindgen = { version = "0.6" }
 tsify = { version = "0.5", features = ["js"] }
 wasm-bindgen-test = "0.3"
-serde_bytes = { version = "0.11" }
 
 # Allocator
 talc = "5"
