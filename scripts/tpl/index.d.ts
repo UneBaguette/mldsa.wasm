@@ -3,4 +3,4 @@
 // @ts-nocheck
 export {Signer, generateKeypair, generateKeypairFromSeed, sign, verify, GenerateKeypairResult} from './bundler/mldsa{{N}}';
 
-export type { default } from './web/mldsa{{N}}';
+export { default } from './web/mldsa{{N}}';
