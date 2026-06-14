@@ -2,3 +2,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // @ts-nocheck
 export {Signer, generateKeypair, generateKeypairFromSeed, sign, verify, GenerateKeypairResult} from './bundler/mldsa{{N}}';
+
+export type { default } from './web/mldsa{{N}}';

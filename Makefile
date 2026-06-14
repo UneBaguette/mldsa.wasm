@@ -19,7 +19,7 @@ PKG_DIR      := pkg
 CARGO_FLAGS  := -C target-feature=+simd128 -C opt-level=3
 
 VARIANTS     := 44 65 87
-VERSION      := $(shell grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
+NPM_VERSION  := $(shell node -p "require('./package.json').version")
 
 # rs
 
@@ -104,7 +104,7 @@ wasm$(1):
 	@node -e "\
 	  const pkg = { \
 	    name: 'mldsa$(1)-wasm', \
-	    version: '$(VERSION)', \
+	    version: '$(NPM_VERSION)', \
 	    description: 'ML-DSA-$(1) (FIPS 204) digital signatures via Rust/WASM', \
 	    license: 'MIT OR Apache-2.0', \
 	    repository: { type: 'git', url: 'https://github.com/UneBaguette/mldsa.wasm' }, \
@@ -112,8 +112,8 @@ wasm$(1):
 	    types: 'index.d.ts', \
 	    exports: { '.': { \
 	      node: { require: './node/mldsa$(1).js', import: './node/mldsa$(1).js' }, \
-	      bundler: './index.js', \
-	      import: './index.js', \
+	      webpack: './bundler/mldsa$(1).js', \
+	      import: './web/mldsa$(1).js', \
 	      default: './web/mldsa$(1).js' \
 	    }}, \
 	    files: ['bundler/','web/','node/','index.js','index.d.ts', \
@@ -142,30 +142,30 @@ wasm-unified: wasm44 wasm65 wasm87
 	@node -e "\
 	  const pkg = { \
 	    name: 'mldsa-wasm-rs', \
-	    version: '$(VERSION)', \
+	    version: '$(NPM_VERSION)', \
 	    description: 'ML-DSA (FIPS 204) digital signatures via Rust/WASM', \
 	    license: 'MIT OR Apache-2.0', \
 	    repository: { type: 'git', url: 'https://github.com/UneBaguette/mldsa.wasm' }, \
 	    exports: { \
-	      './44': { \
-	        node: { require: './44/node/mldsa44.js', import: './44/node/mldsa44.js' }, \
-	        bundler: './44/index.js', \
-	        import: './44/index.js', \
-	        default: './44/web/mldsa44.js' \
-	      }, \
-	      './65': { \
-	        node: { require: './65/node/mldsa65.js', import: './65/node/mldsa65.js' }, \
-	        bundler: './65/index.js', \
-	        import: './65/index.js', \
-	        default: './65/web/mldsa65.js' \
-	      }, \
-	      './87': { \
-	        node: { require: './87/node/mldsa87.js', import: './87/node/mldsa87.js' }, \
-	        bundler: './87/index.js', \
-	        import: './87/index.js', \
-	        default: './87/web/mldsa87.js' \
-	      } \
-	    }, \
+          './44': { \
+            node: { require: './44/node/mldsa44.js', import: './44/node/mldsa44.js' }, \
+            webpack: './44/bundler/mldsa44.js', \
+            import: './44/web/mldsa44.js', \
+            default: './44/web/mldsa44.js' \
+          }, \
+          './65': { \
+            node: { require: './65/node/mldsa65.js', import: './65/node/mldsa65.js' }, \
+            webpack: './65/bundler/mldsa65.js', \
+            import: './65/web/mldsa65.js', \
+            default: './65/web/mldsa65.js' \
+          }, \
+          './87': { \
+            node: { require: './87/node/mldsa87.js', import: './87/node/mldsa87.js' }, \
+            webpack: './87/bundler/mldsa87.js', \
+            import: './87/web/mldsa87.js', \
+            default: './87/web/mldsa87.js' \
+          } \
+        }, \
 	    files: ['44/','65/','87/','README.md','LICENSE-MIT','LICENSE-APACHE'], \
 	    keywords: ['ml-dsa','fips-204','dilithium','signature','post-quantum','wasm','crypto'] \
 	  }; \

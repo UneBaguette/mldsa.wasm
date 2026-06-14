@@ -44,14 +44,52 @@ jobs:
       - name: Run Native tests
         run: make test
 
+      - name: Check npm version bump
+        id: npm_version
+        run: |
+          LOCAL=$(node -p "require('./package.json').version")
+          PUBLISHED=$(npm view mldsa65-wasm version 2>/dev/null || echo "0.0.0")
+          if [ "$LOCAL" = "$PUBLISHED" ]; then
+          echo "skip_npm=true" >> "$GITHUB_OUTPUT"
+          else
+          echo "skip_npm=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check crate version bump
+        id: crate_version
+        run: |
+          LOCAL=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
+          PUBLISHED=$(cargo search mldsa65 --limit 1 | head -1 | sed 's/.*"\(.*\)".*/\1/' || echo "0.0.0")
+          if [ "$LOCAL" = "$PUBLISHED" ]; then
+            echo "skip_crates=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip_crates=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check core version bump
+        id: core_version
+        run: |
+          LOCAL=$(grep '^version' crates/mldsa-core/Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
+          PUBLISHED=$(cargo search mldsa-core --limit 1 | head -1 | sed 's/.*"\(.*\)".*/\1/' || echo "0.0.0")
+          if [ "$LOCAL" = "$PUBLISHED" ]; then
+            echo "skip_core=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip_core=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Authenticate with crates.io
         id: auth
         uses: rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe # v1
 
-      - name: Publish to crates.io
-        run: |
-          make publish-core
-          make publish-crates
+      - name: Publish core to crates.io
+        if: steps.core_version.outputs.skip_core == 'false'
+        run: make publish-core
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+
+      - name: Publish variants to crates.io
+        if: steps.crate_version.outputs.skip_crates == 'false'
+        run: make publish-crates
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
 
@@ -62,4 +100,5 @@ jobs:
         run: make wasm
 
       - name: Publish to npm
+        if: steps.npm_version.outputs.skip_npm == 'false'
         run: make publish-npm
