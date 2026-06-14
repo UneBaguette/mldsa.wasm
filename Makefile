@@ -104,7 +104,7 @@ wasm$(1):
 	@node -e "\
 	  const pkg = { \
 	    name: 'mldsa$(1)-wasm', \
-	    version: '$(NPM_VERSION)', \
+	    version: '$(VERSION)', \
 	    description: 'ML-DSA-$(1) (FIPS 204) digital signatures via Rust/WASM', \
 	    license: 'MIT OR Apache-2.0', \
 	    repository: { type: 'git', url: 'https://github.com/UneBaguette/mldsa.wasm' }, \
@@ -142,7 +142,7 @@ wasm-unified: wasm44 wasm65 wasm87
 	@node -e "\
 	  const pkg = { \
 	    name: 'mldsa-wasm-rs', \
-	    version: '$(NPM_VERSION)', \
+	    version: '$(VERSION)', \
 	    description: 'ML-DSA (FIPS 204) digital signatures via Rust/WASM', \
 	    license: 'MIT OR Apache-2.0', \
 	    repository: { type: 'git', url: 'https://github.com/UneBaguette/mldsa.wasm' }, \
