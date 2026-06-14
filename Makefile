@@ -19,7 +19,7 @@ PKG_DIR      := pkg
 CARGO_FLAGS  := -C target-feature=+simd128 -C opt-level=3
 
 VARIANTS     := 44 65 87
-NPM_VERSION  := $(shell node -p "require('./package.json').version")
+VERSION      := $(shell grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
 
 # rs
 
