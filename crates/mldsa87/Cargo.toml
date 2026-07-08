@@ -31,7 +31,7 @@ zeroize = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-getrandom = { version = "0.4", features = ["wasm_js"] }
+getrandom = { workspace = true, features = ["wasm_js"] }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 talc = { workspace = true, optional = true }
