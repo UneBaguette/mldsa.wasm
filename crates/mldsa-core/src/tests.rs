@@ -218,7 +218,7 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_sign_verify_roundtrip() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
                 let sig = sign_wasm(&kp.seed, b"hello wasm", None).unwrap();
 
                 assert!(verify_wasm(&kp.verifying_key, b"hello wasm", &sig, None).unwrap());
@@ -226,7 +226,7 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_sign_verify_with_context() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
                 let ctx = Some(b"vexahub:v1:share".to_vec());
                 let sig = sign_wasm(&kp.seed, b"hello", ctx.clone()).unwrap();
 
@@ -240,7 +240,7 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_sign_verify_empty_message() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
                 let sig = sign_wasm(&kp.seed, b"", None).unwrap();
 
                 assert!(verify_wasm(&kp.verifying_key, b"", &sig, None).unwrap());
@@ -248,7 +248,7 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_deterministic_signatures() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
                 let sig1 = sign_wasm(&kp.seed, b"test", None).unwrap();
                 let sig2 = sign_wasm(&kp.seed, b"test", None).unwrap();
 
@@ -257,7 +257,7 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_keypair_sizes() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
 
                 assert_eq!(kp.seed.len(), SEED_SIZE);
                 assert_eq!(kp.verifying_key.len(), VERIFYING_KEY_SIZE);
@@ -265,7 +265,7 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_signature_size() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
                 let sig = sign_wasm(&kp.seed, b"test", None).unwrap();
 
                 assert_eq!(sig.len(), SIGNATURE_SIZE);
@@ -275,16 +275,16 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_from_seed_reproduces_keypair() {
-                let kp = generate_keypair_wasm();
-                let kp2 = generate_keypair_from_seed_wasm(&kp.seed).unwrap();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
+                let kp2 = generate_keypair_from_seed_wasm(&kp.seed).unwrap().to_rust().unwrap();
 
                 assert_eq!(kp.verifying_key, kp2.verifying_key);
             }
 
             #[wasm_bindgen_test]
             fn wasm_from_seed_cross_verify() {
-                let kp = generate_keypair_wasm();
-                let kp2 = generate_keypair_from_seed_wasm(&kp.seed).unwrap();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
+                let kp2 = generate_keypair_from_seed_wasm(&kp.seed).unwrap().to_rust().unwrap();
                 let sig = sign_wasm(&kp.seed, b"test", None).unwrap();
 
                 assert!(verify_wasm(&kp2.verifying_key, b"test", &sig, None).unwrap());
@@ -294,7 +294,7 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_signer_roundtrip() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
                 let signer = Signer::new(&kp.seed).unwrap();
                 let sig = signer.sign(b"hello", None);
 
@@ -303,7 +303,7 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_signer_verifying_key_matches() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
                 let signer = Signer::new(&kp.seed).unwrap();
 
                 assert_eq!(signer.verifying_key(), kp.verifying_key);
@@ -311,7 +311,7 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_signer_deterministic() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
                 let signer = Signer::new(&kp.seed).unwrap();
                 let sig1 = signer.sign(b"test", None);
                 let sig2 = signer.sign(b"test", None);
@@ -321,7 +321,7 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_signer_matches_standalone_sign() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
                 let signer = Signer::new(&kp.seed).unwrap();
                 let sig_signer = signer.sign(b"test", None);
                 let sig_standalone = sign_wasm(&kp.seed, b"test", None).unwrap();
@@ -331,7 +331,7 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_signer_with_context() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
                 let signer = Signer::new(&kp.seed).unwrap();
                 let ctx = Some(b"vexahub:v1:share".to_vec());
                 let sig = signer.sign(b"hello", ctx.clone());
@@ -343,7 +343,7 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_wrong_message_fails() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
                 let sig = sign_wasm(&kp.seed, b"correct", None).unwrap();
 
                 assert!(!verify_wasm(&kp.verifying_key, b"wrong", &sig, None).unwrap());
@@ -351,8 +351,8 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_wrong_key_fails() {
-                let kp1 = generate_keypair_wasm();
-                let kp2 = generate_keypair_wasm();
+                let kp1 = generate_keypair_wasm().unwrap().to_rust().unwrap();
+                let kp2 = generate_keypair_wasm().unwrap().to_rust().unwrap();
                 let sig = sign_wasm(&kp1.seed, b"hello", None).unwrap();
 
                 assert!(!verify_wasm(&kp2.verifying_key, b"hello", &sig, None).unwrap());
@@ -377,7 +377,7 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_verify_wrong_vk_length() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
                 let sig = sign_wasm(&kp.seed, b"test", None).unwrap();
 
                 assert!(verify_wasm(&[0u8; 16], b"test", &sig, None).is_err());
@@ -385,14 +385,14 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_verify_wrong_sig_length() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
 
                 assert!(verify_wasm(&kp.verifying_key, b"test", &[0u8; 16], None).is_err());
             }
 
             #[wasm_bindgen_test]
             fn wasm_verify_empty_vk() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
                 let sig = sign_wasm(&kp.seed, b"test", None).unwrap();
 
                 assert!(verify_wasm(&[], b"test", &sig, None).is_err());
@@ -400,7 +400,7 @@ macro_rules! test_mldsa {
 
             #[wasm_bindgen_test]
             fn wasm_verify_empty_sig() {
-                let kp = generate_keypair_wasm();
+                let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
 
                 assert!(verify_wasm(&kp.verifying_key, b"test", &[], None).is_err());
             }
