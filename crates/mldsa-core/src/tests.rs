@@ -276,7 +276,10 @@ macro_rules! test_mldsa {
             #[wasm_bindgen_test]
             fn wasm_from_seed_reproduces_keypair() {
                 let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
-                let kp2 = generate_keypair_from_seed_wasm(&kp.seed).unwrap().to_rust().unwrap();
+                let kp2 = generate_keypair_from_seed_wasm(&kp.seed)
+                    .unwrap()
+                    .to_rust()
+                    .unwrap();
 
                 assert_eq!(kp.verifying_key, kp2.verifying_key);
             }
@@ -284,7 +287,10 @@ macro_rules! test_mldsa {
             #[wasm_bindgen_test]
             fn wasm_from_seed_cross_verify() {
                 let kp = generate_keypair_wasm().unwrap().to_rust().unwrap();
-                let kp2 = generate_keypair_from_seed_wasm(&kp.seed).unwrap().to_rust().unwrap();
+                let kp2 = generate_keypair_from_seed_wasm(&kp.seed)
+                    .unwrap()
+                    .to_rust()
+                    .unwrap();
                 let sig = sign_wasm(&kp.seed, b"test", None).unwrap();
 
                 assert!(verify_wasm(&kp2.verifying_key, b"test", &sig, None).unwrap());
