@@ -8,7 +8,7 @@ macro_rules! wasm_mldsa {
         mod wasm {
             use super::*;
             use serde::{Deserialize, Serialize};
-            use tsify::Tsify;
+            use tsify::{Ts, Tsify};
             use wasm_bindgen::prelude::*;
             use zeroize::Zeroize;
 
@@ -17,7 +17,6 @@ macro_rules! wasm_mldsa {
             /// It deterministically derives the full ML-DSA keypair and must be stored
             /// securely. It is equivalent to a private key.
             #[derive(Serialize, Deserialize, Tsify)]
-            #[tsify(into_wasm_abi)] // TODO: Remove once deprecated
             #[serde(rename_all = "camelCase")]
             pub struct GenerateKeypairResult {
                 #[tsify(type = "Uint8Array")]
@@ -32,13 +31,14 @@ macro_rules! wasm_mldsa {
             /// The seed is returned to JS memory. You are responsible for
             /// zeroizing it after use. Prefer `Signer` when possible.
             #[wasm_bindgen(js_name = "generateKeypair")]
-            pub fn generate_keypair_wasm() -> GenerateKeypairResult {
+            pub fn generate_keypair_wasm() -> Result<Ts<GenerateKeypairResult>, JsError> {
                 let kp = super::generate_keypair();
 
-                GenerateKeypairResult {
+                Ok(GenerateKeypairResult {
                     seed: kp.seed.to_vec(),
                     verifying_key: kp.verifying_key.to_vec(),
                 }
+                .into_ts()?)
             }
 
             /// Reproduces an ML-DSA keypair from an existing 32-byte seed.
@@ -48,7 +48,7 @@ macro_rules! wasm_mldsa {
             #[wasm_bindgen(js_name = "generateKeypairFromSeed")]
             pub fn generate_keypair_from_seed_wasm(
                 seed: &[u8],
-            ) -> Result<GenerateKeypairResult, JsError> {
+            ) -> Result<Ts<GenerateKeypairResult>, JsError> {
                 let seed_arr: [u8; SEED_SIZE] = seed
                     .try_into()
                     .map_err(|_| JsError::new("seed must be 32 bytes"))?;
@@ -58,19 +58,9 @@ macro_rules! wasm_mldsa {
                 Ok(GenerateKeypairResult {
                     seed: kp.seed.to_vec(),
                     verifying_key: kp.verifying_key.to_vec(),
-                })
+                }
+                .into_ts()?)
             }
-
-            // XXX: For future tsify, don't use yet.
-            // #[wasm_bindgen(js_name = "generateKeypair")]
-            // pub fn generate_keypair_wasm() -> Result<tsify::Ts<GenerateKeypairResult>, JsError> {
-            //     let kp = super::generate_keypair();
-            //
-            //     Ok(GenerateKeypairResult {
-            //         seed: kp.seed.to_vec(),
-            //         verifying_key: kp.verifying_key.to_vec(),
-            //     }.into_ts()?)
-            // }
 
             /// Signs a message using the seed directly.
             ///
