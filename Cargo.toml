@@ -30,7 +30,7 @@ wasm-bindgen-test = "0.3"
 talc = "5"
 
 # Internal
-mldsa-core = { path = "crates/mldsa-core" }
+mldsa-core = { path = "crates/mldsa-core", version = "0.4" }
 mldsa44 = { path = "crates/mldsa44" }
 mldsa65 = { path = "crates/mldsa65" }
 mldsa87 = { path = "crates/mldsa87" }
