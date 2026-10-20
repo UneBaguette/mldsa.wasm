@@ -20,9 +20,20 @@ macro_rules! wasm_mldsa {
             #[serde(rename_all = "camelCase")]
             pub struct GenerateKeypairResult {
                 #[tsify(type = "Uint8Array")]
+                #[serde(with = "serde_bytes")]
                 pub seed: Vec<u8>,
                 #[tsify(type = "Uint8Array")]
+                #[serde(with = "serde_bytes")]
                 pub verifying_key: Vec<u8>,
+            }
+
+            /// Zeroizes the WASM-side copy of the seed once the result
+            /// has been converted to JS. The copy returned to JS is not
+            /// affected and remains the caller's responsibility.
+            impl Drop for GenerateKeypairResult {
+                fn drop(&mut self) {
+                    self.seed.zeroize();
+                }
             }
 
             /// Generates a fresh ML-DSA keypair using the system RNG.

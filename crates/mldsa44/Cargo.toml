@@ -16,7 +16,7 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 default = []
-wasm = ["dep:wasm-bindgen", "dep:serde-wasm-bindgen", "dep:tsify", "dep:zeroize", "dep:serde", "mldsa-core/wasm"]
+wasm = ["dep:wasm-bindgen", "dep:serde-wasm-bindgen", "dep:serde_bytes", "dep:tsify", "dep:zeroize", "dep:serde", "mldsa-core/wasm"]
 talc = ["dep:talc"]
 
 [dependencies]
@@ -26,6 +26,7 @@ mldsa-core = { workspace = true }
 # wasm
 wasm-bindgen = { workspace = true, optional = true }
 serde-wasm-bindgen = { workspace = true, optional = true }
+serde_bytes = { workspace = true, optional = true }
 tsify = { workspace = true, optional = true }
 zeroize = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
